@@ -23,7 +23,7 @@
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //    THE SOFTWARE.
 
-namespace sk_customllm
+namespace LLMFriend
 {
     public class CustomHttpMessageHandler : HttpClientHandler
     {

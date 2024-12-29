@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel.ChatCompletion;
-using sk_customllm;
+using LLMFriend;
 
 var host = Host.CreateApplicationBuilder(args);
 
@@ -14,7 +14,7 @@ host.Services
     .AddKernel()
     .Services.AddSingleton<IChatCompletionService>(customService);
 
-host.Services.AddHostedService<LLMBackgroundService>();
+host.Services.AddHostedService<LlmBackgroundService>();
 
 var app = host.Build();
 

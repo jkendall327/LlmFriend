@@ -1,4 +1,4 @@
-﻿namespace sk_customllm.Models
+﻿namespace LLMFriend.Models
 {
     public class ChatRequest
     {

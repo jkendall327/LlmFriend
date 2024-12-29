@@ -1,4 +1,4 @@
-﻿namespace sk_customllm.Models
+﻿namespace LLMFriend.Models
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class ChatResponseChoice

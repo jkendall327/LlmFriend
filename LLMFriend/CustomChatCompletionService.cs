@@ -2,10 +2,43 @@
 using Microsoft.SemanticKernel.ChatCompletion;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using sk_customllm.Models;
+using LLMFriend.Models;
+using Microsoft.Extensions.AI;
+using ChatMessage = LLMFriend.Models.ChatMessage;
 
-namespace sk_customllm
+namespace LLMFriend
 {
+    using ChatMessage = Models.ChatMessage;
+
+    public class LocalChatClient : IChatClient
+    {
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ChatCompletion> CompleteAsync(IList<Microsoft.Extensions.AI.ChatMessage> chatMessages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
+        public IAsyncEnumerable<StreamingChatCompletionUpdate> CompleteStreamingAsync(IList<Microsoft.Extensions.AI.ChatMessage> chatMessages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            throw new NotImplementedException();
+        }
+
+        public object? GetService(Type serviceType, object? serviceKey = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ChatClientMetadata Metadata { get; }
+    }
+
     public class CustomChatCompletionService : IChatCompletionService
     {
         // public property for the model url endpoint

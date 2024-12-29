@@ -1,10 +1,11 @@
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
 using System.Text.Json;
-using Microsoft.SemanticKernel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel.ChatCompletion;
 
-public class LLMBackgroundService : BackgroundService
+namespace LLMFriend;
+
+public class LlmBackgroundService : BackgroundService
 {
     private readonly IConfiguration _configuration;
     private readonly IChatCompletionService _chatService;
@@ -12,7 +13,7 @@ public class LLMBackgroundService : BackgroundService
     private readonly string _watchFolder;
     private readonly TimeSpan _timeout;
     
-    public LLMBackgroundService(
+    public LlmBackgroundService(
         IConfiguration configuration,
         IChatCompletionService chatService)
     {
@@ -21,9 +22,9 @@ public class LLMBackgroundService : BackgroundService
         
         // Read settings from configuration
         _configPath = _configuration["LLMService:ConfigPath"] 
-            ?? throw new ArgumentNullException("ConfigPath must be specified in configuration");
+                      ?? throw new ArgumentNullException("ConfigPath must be specified in configuration");
         _watchFolder = _configuration["LLMService:WatchFolder"] 
-            ?? throw new ArgumentNullException("WatchFolder must be specified in configuration");
+                       ?? throw new ArgumentNullException("WatchFolder must be specified in configuration");
         _timeout = TimeSpan.FromSeconds(
             int.Parse(_configuration["LLMService:TimeoutSeconds"] ?? "30"));
     }
@@ -85,7 +86,7 @@ public class LLMBackgroundService : BackgroundService
     {
         var jsonString = await File.ReadAllTextAsync(_configPath);
         return JsonSerializer.Deserialize<Dictionary<string, object>>(jsonString) 
-            ?? new Dictionary<string, object>();
+               ?? new Dictionary<string, object>();
     }
     
     private async Task WaitUntilNextExecutionTimeAsync(CancellationToken token)
