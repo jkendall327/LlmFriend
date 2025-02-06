@@ -10,9 +10,7 @@ var customService = new CustomChatCompletionService
     ModelUrl = "http://localhost:1234/v1/chat/completions"
 };
 
-host.Services
-    .AddKernel()
-    .Services.AddSingleton<IChatCompletionService>(customService);
+host.Services.AddSingleton<IChatCompletionService>(customService);
 
 host.Services.AddHostedService<LlmBackgroundService>();
 
