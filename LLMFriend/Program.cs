@@ -7,13 +7,14 @@ using Microsoft.Extensions.Options;
 using System.IO.Abstractions;
 using System.Threading.Tasks;
 using LLMFriend;
+using LLMFriend.Configuration;
 
 var host = Host.CreateApplicationBuilder(args);
 host.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var services = host.Services;
 
-services.Configure<AppSettings>(host.Configuration.GetSection("AppSettings"));
+services.Configure<ConfigurationModel>(host.Configuration.GetSection("ConfigurationModel"));
 services.AddSingleton<IClock, Clock>();
 services.AddSingleton<IFileSystem, FileSystem>();
 
@@ -22,10 +23,16 @@ services.AddLogging(configure => configure.AddConsole());
 var app = host.Build();
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-var optionsMonitor = app.Services.GetRequiredService<IOptionsMonitor<AppSettings>>();
+var configMonitor = app.Services.GetRequiredService<IOptionsMonitor<ConfigurationModel>>();
 var clock = app.Services.GetRequiredService<IClock>();
 
-logger.LogInformation(optionsMonitor.CurrentValue.Greeting);
 logger.LogInformation($"Current Time: {clock.GetNow()}");
+
+logger.LogInformation("Configuration Values:");
+logger.LogInformation($"AllowedFilePathsForSearch: {string.Join(", ", configMonitor.CurrentValue.AllowedFilePathsForSearch)}");
+logger.LogInformation($"CrontabForScheduledInvocation: {configMonitor.CurrentValue.CrontabForScheduledInvocation}");
+logger.LogInformation($"ProbabilityOfStartingConversationsAutonomously: {configMonitor.CurrentValue.ProbabilityOfStartingConversationsAutonomously}");
+logger.LogInformation($"TimeForExpectedReplyInConversation: {configMonitor.CurrentValue.TimeForExpectedReplyInConversation}");
+logger.LogInformation($"AutonomousFeaturesEnabled: {configMonitor.CurrentValue.AutonomousFeaturesEnabled}");
 
 await app.RunAsync();
