@@ -21,6 +21,7 @@ services.AddSingleton<IClock, Clock>();
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<ILlmToolService, LlmToolService>();
 services.AddSingleton<ISchedulingService, SchedulingService>();
+services.AddHostedService<ChatService>();
 
 services.AddLogging(configure => configure.AddConsole());
 
