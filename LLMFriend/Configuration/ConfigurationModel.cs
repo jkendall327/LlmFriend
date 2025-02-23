@@ -9,5 +9,7 @@ namespace LLMFriend.Configuration
         public double ProbabilityOfStartingConversationsAutonomously { get; set; }
         public TimeSpan TimeForExpectedReplyInConversation { get; set; }
         public bool AutonomousFeaturesEnabled { get; set; }
+        public string PersonalityProfilePath { get; set; }
+        public string? MemoryBankFolder { get; set; }
     }
 }
