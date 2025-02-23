@@ -11,5 +11,8 @@ namespace LLMFriend.Configuration
         public bool AutonomousFeaturesEnabled { get; set; }
         public string PersonalityProfilePath { get; set; }
         public string? MemoryBankFolder { get; set; }
+
+        // Added for Semantic Kernel integration
+        public string OpenAIApiKey { get; set; }
     }
 }
