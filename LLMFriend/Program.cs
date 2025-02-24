@@ -48,4 +48,27 @@ var invocationContext = new InvocationContext
 
 await llmService.InvokeLlmAsync(invocationContext);
 
-await app.RunAsync();
+var config = app.Services.GetRequiredService<IOptions<ConfigurationModel>>();
+
+while (true)
+{
+    await llmService.InvokeLlmAsync(invocationContext);
+
+    var inputTask = Task.Run(Console.ReadLine);
+    var timeoutTask = Task.Delay(config.Value.TimeForExpectedReplyInConversation);
+
+    var completedTask = await Task.WhenAny(inputTask, timeoutTask);
+    
+    if (completedTask == inputTask)
+    {
+        // User responded in time.
+        var userInput = inputTask.Result;
+    }
+    else
+    {
+        // Timeout reached before user input.
+        Console.WriteLine("User did not respond in time.");
+    }
+    
+    await llmService.InvokeLlmAsync(invocationContext);
+}
