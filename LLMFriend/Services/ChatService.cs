@@ -62,9 +62,9 @@ namespace LLMFriend.Services
             while (true)
             {
                 var stopwatch = Stopwatch.StartNew();
-                var inputTask = Task.Run(Console.ReadLine, cancellationToken);
+                var inputTask = Console.In.ReadLineAsync(cancellationToken).AsTask();
                 var timeoutTask = Task.Delay(timeForExpectedReplyInConversation, cancellationToken);
-
+                
                 var completedTask = await Task.WhenAny(inputTask, timeoutTask);
 
                 ConversationContinuation continuation;
