@@ -10,6 +10,7 @@ using LLMFriend;
 using LLMFriend.Configuration;
 using LLMFriend.Services;
 using Cronos;
+using Microsoft.SemanticKernel;
 
 var host = Host.CreateApplicationBuilder(args);
 host.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -26,6 +27,9 @@ services.AddSingleton<ILlmToolService, LlmToolService>();
 services.AddSingleton<ISchedulingService, SchedulingService>();
 services.AddSingleton<ILlmService, SemanticLlmService>();
 services.AddHostedService<ChatService>();
+
+services.AddOpenAIChatCompletion("davinci", host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("OpenAIApiKey").Value);
+services.AddSingleton<Kernel>();
 
 // Add Logging
 services.AddLogging(configure => configure.AddConsole());

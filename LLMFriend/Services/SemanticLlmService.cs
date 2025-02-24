@@ -16,18 +16,17 @@ namespace LLMFriend.Services
         private readonly CancellationTokenSource _cts;
 
         public SemanticLlmService(
+            Kernel kernel,
             ILlmToolService llmToolService,
             IOptionsMonitor<ConfigurationModel> configMonitor,
             ILogger<SemanticLlmService> logger)
         {
+            _kernel = kernel;
             _llmToolService = llmToolService;
             _config = configMonitor.CurrentValue;
             _logger = logger;
             _cts = new CancellationTokenSource();
 
-            _kernel = Kernel.CreateBuilder()
-                .AddOpenAIChatCompletion("davinci", _config.OpenAIApiKey)
-                .Build();
         }
 
         public async Task InvokeLlmAsync(InvocationContext context)
@@ -59,9 +58,9 @@ namespace LLMFriend.Services
                 // Execute the pipeline with timeout
                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
                 timeoutCts.CancelAfter(_config.TimeForExpectedReplyInConversation);
-                var response = await _kernel.RunAsync(
+                var response = await _kernel.InvokeAsync(
                     pipelineInput,
-                    cancellation: timeoutCts.Token
+                    cancellationToken: timeoutCts.Token
                 );
 
                 // If the response indicates timeout, send a special message to the LLM
