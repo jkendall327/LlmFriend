@@ -56,12 +56,11 @@ namespace LLMFriend.Services
 
             var timeForExpectedReplyInConversation = _configMonitor.CurrentValue.TimeForExpectedReplyInConversation;
 
+            _history = await _llmService.InvokeLlmAsync(invocationContext);
+            Console.WriteLine(_history.Last());
+
             while (true)
             {
-                _history = await _llmService.InvokeLlmAsync(invocationContext);
-
-                Console.WriteLine(_history.Last());
-                
                 var stopwatch = Stopwatch.StartNew();
                 var inputTask = Task.Run(Console.ReadLine, cancellationToken);
                 var timeoutTask = Task.Delay(timeForExpectedReplyInConversation, cancellationToken);
