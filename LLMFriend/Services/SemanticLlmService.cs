@@ -90,7 +90,7 @@ namespace LLMFriend.Services
 
             if (details.MessageTookTooLong)
             {
-                chatHistory.AddDeveloperMessage($"The user took too long to send their last message ({details.TimeForUserMessage}).");
+                chatHistory.AddUserMessage($"[SYSTEM]: The user took too long to send their last message ({details.TimeForUserMessage}).");
             }
             
             try
