@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace LLMFriend.Services
 {
@@ -20,6 +21,6 @@ namespace LLMFriend.Services
 
     public interface ILlmService
     {
-        Task InvokeLlmAsync(InvocationContext context);
+        Task<ChatHistory> InvokeLlmAsync(InvocationContext context);
     }
 }
