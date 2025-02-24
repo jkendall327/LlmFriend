@@ -77,7 +77,6 @@ namespace LLMFriend.Services
                     InvocationType.Scheduled => "This invocation is scheduled.",
                     InvocationType.Autonomous => "This invocation is autonomous.",
                     InvocationType.UserInitiated => "This invocation is user-initiated.",
-                    InvocationType.DelayInUserResponse => "The user has taken too long to respond to your last message.",
                     _ => "Unknown invocation type."
                 };
 

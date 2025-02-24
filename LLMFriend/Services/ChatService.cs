@@ -37,7 +37,7 @@ namespace LLMFriend.Services
             var invocationContext = new InvocationContext
             {
                 InvocationTime = _clock.GetNow(),
-                Type = InvocationType.Autonomous,
+                Type = InvocationType.Scheduled,
                 Username = Environment.UserName,
                 FileList = _llmToolService.ReadEnvironment().ToArray()
             };

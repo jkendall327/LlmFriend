@@ -7,7 +7,6 @@ namespace LLMFriend.Services
     {
         Scheduled,
         Autonomous,
-        DelayInUserResponse,
         UserInitiated
     }
 
