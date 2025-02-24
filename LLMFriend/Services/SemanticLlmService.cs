@@ -49,18 +49,33 @@ namespace LLMFriend.Services
                 prompt += $" Current Time: {systemTime}\nUsername: {username}\nFiles: {fileList}\n";
 
                 // Define the pipeline
+                var pipelineInput = prompt;
 
                 // Add tool capabilities
+                _kernel.ImportSkill(_llmToolService, "tools");
 
                 // Execute the pipeline with timeout
+                var response = await _kernel.RunAsync(
+                    pipelineInput,
+                    cancellation: _cts.Token,
+                    timeout: _config.TimeForExpectedReplyInConversation
+                );
 
-                // If timeout is reached, send a special message back to the LLM saying the user was slow
-                // Otherwise just send the user's response
+                // If the response indicates timeout, send a special message to the LLM
+                if (response.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("LLM did not respond within the expected timeframe.");
+                    await _kernel.RunAsync("Please respond as there was a timeout in the previous interaction.", cancellation: _cts.Token);
+                }
+                else
+                {
+                    _logger.LogInformation("LLM Response: {Response}", response);
+                }
             }
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("LLM invocation was canceled due to timeout.");
-                // Send a special message back to the LLM
+                await _kernel.RunAsync("Operation timed out. Please continue the conversation.", cancellation: _cts.Token);
             }
             catch (Exception ex)
             {
