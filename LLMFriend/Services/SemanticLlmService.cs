@@ -123,6 +123,11 @@ namespace LLMFriend.Services
                 new(AuthorRole.System, prompt)
             };
 
+            if (context.Type is InvocationType.UserInitiated && !string.IsNullOrWhiteSpace(context.UserStartingMessage))
+            {
+                chatHistory.AddUserMessage(context.UserStartingMessage);
+            }
+            
             var executionSettings = new OpenAIPromptExecutionSettings
             {
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()

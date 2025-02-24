@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace LLMFriend.Services
@@ -15,8 +13,9 @@ namespace LLMFriend.Services
     {
         public DateTime InvocationTime { get; set; }
         public InvocationType Type { get; set; }
-        public string Username { get; set; }
-        public string[] FileList { get; set; }
+        public required string Username { get; set; }
+        public string[] FileList { get; set; } = [];
+        public string? UserStartingMessage { get; set; }
     }
 
     public interface ILlmService

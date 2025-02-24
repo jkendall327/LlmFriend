@@ -36,14 +36,15 @@ namespace LLMFriend.Services
 
         private ChatHistory? _history;
         
-        public async Task RunChatAsync(CancellationToken cancellationToken = default)
+        public async Task RunChatAsync(string? userMessage, CancellationToken cancellationToken = default)
         {
             var invocationContext = new InvocationContext
             {
                 InvocationTime = _clock.GetNow(),
                 Type = InvocationType.Scheduled,
                 Username = Environment.UserName,
-                FileList = _llmToolService.ReadEnvironment().ToArray()
+                FileList = _llmToolService.ReadEnvironment().ToArray(),
+                UserStartingMessage = userMessage
             };
 
             while (true)

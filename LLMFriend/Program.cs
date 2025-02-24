@@ -30,4 +30,5 @@ var app = host.Build();
 
 var chat = app.Services.GetRequiredService<ChatService>();
 
-await chat.RunChatAsync();
+// Pass user's starting message if initiated by them
+await chat.RunChatAsync(args.FirstOrDefault());
