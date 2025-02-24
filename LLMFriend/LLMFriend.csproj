@@ -15,4 +15,10 @@
       <PackageReference Include="System.IO.Abstractions" Version="22.0.10" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

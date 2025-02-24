@@ -13,7 +13,6 @@ using Cronos;
 using Microsoft.SemanticKernel;
 
 var host = Host.CreateApplicationBuilder(args);
-host.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 var services = host.Services;
 
@@ -28,11 +27,11 @@ services.AddSingleton<ISchedulingService, SchedulingService>();
 services.AddSingleton<ILlmService, SemanticLlmService>();
 services.AddHostedService<ChatService>();
 
-services.AddOpenAIChatCompletion("davinci", host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("OpenAIApiKey").Value);
-services.AddSingleton<Kernel>();
+var view = host.Configuration.GetDebugView();
 
-// Add Logging
-services.AddLogging(configure => configure.AddConsole());
+var apiKey = host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("OpenAIApiKey").Value;
+services.AddOpenAIChatCompletion("davinci", apiKey);
+services.AddSingleton<Kernel>();
 
 // Build the app
 var app = host.Build();
