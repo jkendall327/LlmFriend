@@ -23,7 +23,7 @@ services.AddSingleton<ILlmService, SemanticLlmService>();
 services.AddSingleton<ChatService>();
 
 var apiKey = host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("OpenAIApiKey").Value;
-services.AddOpenAIChatCompletion("davinci", apiKey);
+services.AddOpenAIChatCompletion("gpt-4o", apiKey);
 services.AddSingleton<Kernel>();
 
 var app = host.Build();
