@@ -2,6 +2,7 @@ using System;
 using Cronos;
 using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LLMFriend.Services
 {
@@ -12,9 +13,9 @@ namespace LLMFriend.Services
         private readonly ILogger<SchedulingService> _logger;
         private readonly CronExpression _cronExpression;
 
-        public SchedulingService(ConfigurationModel config, IClock clock, ILogger<SchedulingService> logger)
+        public SchedulingService(IOptionsMonitor<ConfigurationModel> config, IClock clock, ILogger<SchedulingService> logger)
         {
-            _config = config;
+            _config = config.CurrentValue;
             _clock = clock;
             _logger = logger;
 

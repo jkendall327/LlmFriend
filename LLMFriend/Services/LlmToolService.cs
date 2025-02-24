@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Abstractions;
 using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace LLMFriend.Services
 {
@@ -12,11 +13,11 @@ namespace LLMFriend.Services
         private readonly ILogger<LlmToolService> _logger;
         private readonly ConfigurationModel _config;
 
-        public LlmToolService(IFileSystem fileSystem, ILogger<LlmToolService> logger, ConfigurationModel config)
+        public LlmToolService(IFileSystem fileSystem, ILogger<LlmToolService> logger, IOptionsMonitor<ConfigurationModel> config)
         {
             _fileSystem = fileSystem;
             _logger = logger;
-            _config = config;
+            _config = config.CurrentValue;
         }
 
         public List<string> ReadEnvironment()

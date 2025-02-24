@@ -42,7 +42,7 @@ var configMonitor = app.Services.GetRequiredService<IOptionsMonitor<Configuratio
 var clock = app.Services.GetRequiredService<IClock>();
 var schedulingService = app.Services.GetRequiredService<ISchedulingService>();
 var llmService = app.Services.GetRequiredService<ILlmService>();
-var _llmToolService = app.Services.GetRequiredService<LlmToolService>();
+var _llmToolService = app.Services.GetRequiredService<ILlmToolService>();
 
 // Log current time
 logger.LogInformation($"Current Time: {clock.GetNow()}");
