@@ -14,6 +14,8 @@ using Microsoft.SemanticKernel;
 
 var host = Host.CreateApplicationBuilder(args);
 
+host.Configuration.AddUserSecrets(typeof(Program).Assembly);
+
 var services = host.Services;
 
 // Configure ConfigurationModel with options monitoring
