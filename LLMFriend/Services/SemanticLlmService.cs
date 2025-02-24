@@ -5,11 +5,14 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace LLMFriend.Services
 {
+    public record ConversationContinuation(TimeSpan TimeForUserMessage, bool MessageTookTooLong);
+    
     public class SemanticLlmService : ILlmService
     {
         private readonly ILlmToolService _llmToolService;
         private readonly ILogger<SemanticLlmService> _logger;
         private readonly Kernel _kernel;
+        private readonly IChatCompletionService _chat;
 
         public SemanticLlmService(Kernel kernel,
             ILlmToolService llmToolService,
@@ -18,6 +21,7 @@ namespace LLMFriend.Services
             _kernel = kernel;
             _llmToolService = llmToolService;
             _logger = logger;
+            _chat = _kernel.GetRequiredService<IChatCompletionService>();
         }
 
         const string systemPrompt = """
@@ -66,6 +70,32 @@ namespace LLMFriend.Services
             }
         }
 
+        public async Task<ChatHistory> ContinueConversationAsync(ChatHistory chatHistory, ConversationContinuation details)
+        {
+            try
+            {
+                var executionSettings = new OpenAIPromptExecutionSettings
+                {
+                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                };
+
+                if (details.MessageTookTooLong)
+                {
+                    chatHistory.AddDeveloperMessage($"The user took too long to send their last message ({details.TimeForUserMessage}).");
+                }
+                
+                var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
+
+                chatHistory.Add(result);
+                return chatHistory;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error during LLM invocation: {ErrorMessage}", ex.Message);
+                throw;
+            }
+        }
+
         private async Task<ChatHistory> InvokeCore(InvocationContext context)
         {
             // Gather environmental data
@@ -98,8 +128,7 @@ namespace LLMFriend.Services
                 FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
             };
 
-            var service = _kernel.GetRequiredService<IChatCompletionService>();
-            var result = await service.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
+            var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
 
             chatHistory.Add(result);
 

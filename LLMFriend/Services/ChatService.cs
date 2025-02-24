@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CommandLine;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using LLMFriend.Configuration;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace LLMFriend.Services
 {
@@ -32,6 +34,8 @@ namespace LLMFriend.Services
             _clock = clock;
         }
 
+        private ChatHistory? _history;
+        
         public async Task RunChatAsync(CancellationToken cancellationToken = default)
         {
             var invocationContext = new InvocationContext
@@ -41,28 +45,33 @@ namespace LLMFriend.Services
                 Username = Environment.UserName,
                 FileList = _llmToolService.ReadEnvironment().ToArray()
             };
-            
+
             while (true)
             {
-                await _llmService.InvokeLlmAsync(invocationContext);
+                _history = await _llmService.InvokeLlmAsync(invocationContext);
 
+                var stopwatch = Stopwatch.StartNew();
                 var inputTask = Task.Run(Console.ReadLine, cancellationToken);
                 var timeoutTask = Task.Delay(_configMonitor.CurrentValue.TimeForExpectedReplyInConversation, cancellationToken);
 
                 var completedTask = await Task.WhenAny(inputTask, timeoutTask);
-    
+
+                ConversationContinuation continuation;
+                
                 if (completedTask == inputTask)
                 {
                     // User responded in time.
                     var userInput = inputTask.Result;
+                    _history.AddUserMessage(userInput);
+
+                    continuation = new(stopwatch.Elapsed, false);
                 }
                 else
                 {
-                    // Timeout reached before user input.
-                    Console.WriteLine("User did not respond in time.");
+                    continuation = new(stopwatch.Elapsed, true);
                 }
     
-                await _llmService.InvokeLlmAsync(invocationContext);
+                _history = await _llmService.ContinueConversationAsync(_history, continuation);
             }
         }
     }
