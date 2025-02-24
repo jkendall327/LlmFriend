@@ -38,14 +38,23 @@ namespace LLMFriend.Services
         
         public async Task RunChatAsync(string? userMessage, CancellationToken cancellationToken = default)
         {
+            var type = InvocationType.Autonomous;
+            
+            if (!string.IsNullOrWhiteSpace(userMessage))
+            {
+                type = InvocationType.UserInitiated;
+            }
+            
             var invocationContext = new InvocationContext
             {
                 InvocationTime = _clock.GetNow(),
-                Type = InvocationType.Scheduled,
+                Type = type,
                 Username = Environment.UserName,
                 FileList = _llmToolService.ReadEnvironment().ToArray(),
                 UserStartingMessage = userMessage
             };
+
+            var timeForExpectedReplyInConversation = _configMonitor.CurrentValue.TimeForExpectedReplyInConversation;
 
             while (true)
             {
@@ -53,7 +62,7 @@ namespace LLMFriend.Services
 
                 var stopwatch = Stopwatch.StartNew();
                 var inputTask = Task.Run(Console.ReadLine, cancellationToken);
-                var timeoutTask = Task.Delay(_configMonitor.CurrentValue.TimeForExpectedReplyInConversation, cancellationToken);
+                var timeoutTask = Task.Delay(timeForExpectedReplyInConversation, cancellationToken);
 
                 var completedTask = await Task.WhenAny(inputTask, timeoutTask);
 
