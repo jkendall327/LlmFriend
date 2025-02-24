@@ -10,123 +10,60 @@ using LLMFriend.Configuration;
 
 namespace LLMFriend.Services
 {
-    public class ChatService : IHostedService
+    public class ChatService
     {
         private readonly ILlmToolService _llmToolService;
-        private readonly ISchedulingService _schedulingService;
+        private readonly IClock _clock;
+        private readonly ILlmService _llmService;
         private readonly IOptionsMonitor<ConfigurationModel> _configMonitor;
         private readonly ILogger<ChatService> _logger;
-        private CancellationTokenSource _cts;
 
         public ChatService(
             ILlmToolService llmToolService,
-            ISchedulingService schedulingService,
             IOptionsMonitor<ConfigurationModel> configMonitor,
-            ILogger<ChatService> logger)
+            ILogger<ChatService> logger,
+            ILlmService llmService,
+            IClock clock)
         {
             _llmToolService = llmToolService;
-            _schedulingService = schedulingService;
             _configMonitor = configMonitor;
             _logger = logger;
-            _cts = new CancellationTokenSource();
+            _llmService = llmService;
+            _clock = clock;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task RunChatAsync(CancellationToken cancellationToken = default)
         {
-            Task.Run(() => RunChatAsync(_cts.Token), cancellationToken);
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _cts.Cancel();
-            return Task.CompletedTask;
-        }
-
-        private async Task RunChatAsync(CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Terminal chat interface started. Type /help for a list of commands.");
-
-            while (!cancellationToken.IsCancellationRequested)
+            var invocationContext = new InvocationContext
             {
-                Console.Write("> ");
-                string? input = await Task.Run(() => Console.ReadLine(), cancellationToken);
+                InvocationTime = _clock.GetNow(),
+                Type = InvocationType.Scheduled,
+                Username = Environment.UserName,
+                FileList = _llmToolService.ReadEnvironment().ToArray()
+            };
+            
+            while (true)
+            {
+                await _llmService.InvokeLlmAsync(invocationContext);
 
-                if (string.IsNullOrWhiteSpace(input))
+                var inputTask = Task.Run(Console.ReadLine, cancellationToken);
+                var timeoutTask = Task.Delay(_configMonitor.CurrentValue.TimeForExpectedReplyInConversation, cancellationToken);
+
+                var completedTask = await Task.WhenAny(inputTask, timeoutTask);
+    
+                if (completedTask == inputTask)
                 {
-                    continue;
+                    // User responded in time.
+                    var userInput = inputTask.Result;
                 }
-
-                if (!input.StartsWith("/"))
+                else
                 {
-                    Console.WriteLine("Invalid command format. Commands should start with '/'. Type /help for assistance.");
-                    continue;
+                    // Timeout reached before user input.
+                    Console.WriteLine("User did not respond in time.");
                 }
-
-                var args = input.Split(' ', 2);
-                var command = args[0].ToLower();
-                var argument = args.Length > 1 ? args[1] : string.Empty;
-
-                switch (command)
-                {
-                    case "/set":
-                        if (string.IsNullOrWhiteSpace(argument))
-                        {
-                            Console.WriteLine("Usage: /set <memory>");
-                        }
-                        else
-                        {
-                            _llmToolService.StoreMemory(argument);
-                            Console.WriteLine($"Memory stored: {argument}");
-                        }
-                        break;
-
-                    case "/help":
-                        ShowHelp();
-                        break;
-
-                    case "/schedule":
-                        ShowSchedule();
-                        break;
-
-                    case "/pause":
-                        ToggleAutonomousFeatures();
-                        break;
-
-                    default:
-                        Console.WriteLine("Unknown command. Type /help for a list of available commands.");
-                        break;
-                }
+    
+                await _llmService.InvokeLlmAsync(invocationContext);
             }
-        }
-
-        private void ShowHelp()
-        {
-            Console.WriteLine("Available commands:");
-            Console.WriteLine("/set <memory> - Stores the provided string as a memory.");
-            Console.WriteLine("/help - Displays this help message.");
-            Console.WriteLine("/schedule - Shows the next scheduled invocation time and autonomous features status.");
-            Console.WriteLine("/pause - Toggles autonomous features on or off.");
-            Console.WriteLine($"Configuration file location: {AppContext.BaseDirectory}appsettings.json");
-            Console.WriteLine($"Memory bank folder: {_configMonitor.CurrentValue.MemoryBankFolder}");
-        }
-
-        private void ShowSchedule()
-        {
-            var nextInvocation = _schedulingService.GetNextInvocationTime();
-            string status = _configMonitor.CurrentValue.AutonomousFeaturesEnabled ? "Enabled" : "Paused";
-
-            Console.WriteLine($"Next Invocation Time: {nextInvocation}");
-            Console.WriteLine($"Autonomous Features: {status}");
-        }
-
-        private void ToggleAutonomousFeatures()
-        {
-            var config = _configMonitor.CurrentValue;
-            config.AutonomousFeaturesEnabled = !config.AutonomousFeaturesEnabled;
-            Console.WriteLine($"Autonomous Features are now {(config.AutonomousFeaturesEnabled ? "Enabled" : "Paused")}.");
-            // Note: To update the configuration dynamically, additional implementation is required.
-            // TODO: just write over our config's JSON file.
         }
     }
 }
