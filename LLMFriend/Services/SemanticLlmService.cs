@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
@@ -52,34 +49,18 @@ namespace LLMFriend.Services
                 prompt += $" Current Time: {systemTime}\nUsername: {username}\nFiles: {fileList}\n";
 
                 // Define the pipeline
-                var pipeline = _kernel.CreateFunctionFromPrompt($"{prompt}\n{_config.PersonalityProfilePath}");
 
                 // Add tool capabilities
-                //_kernel.ImportSkill(_llmToolService, "tools");
 
                 // Execute the pipeline with timeout
-                // var response = await _kernel.RunAsync(
-                //     pipeline,
-                //     cancellation: _cts.Token,
-                //     timeout: _config.TimeForExpectedReplyInConversation
-                // );
 
-                // if (response.Contains("timeout", StringComparison.OrdinalIgnoreCase))
-                // {
-                //     // Handle timeout by sending a special message back to the LLM
-                //     _logger.LogWarning("LLM did not respond within the expected timeframe.");
-                //     //await _kernel.RunAsync("Please respond as there was a timeout in the previous interaction.", cancellation: _cts.Token);
-                // }
-                // else
-                // {
-                //     _logger.LogInformation("LLM Response: {Response}", response);
-                // }
+                // If timeout is reached, send a special message back to the LLM saying the user was slow
+                // Otherwise just send the user's response
             }
             catch (OperationCanceledException)
             {
                 _logger.LogWarning("LLM invocation was canceled due to timeout.");
-                // Optionally, send a special message back to the LLM
-                //await _kernel.RunAsync("Operation timed out. Please continue the conversation.", cancellation: _cts.Token);
+                // Send a special message back to the LLM
             }
             catch (Exception ex)
             {
