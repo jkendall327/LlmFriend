@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Orchestration;
+using Microsoft.SemanticKernel.SkillDefinition;
 using LLMFriend.Configuration;
 
 namespace LLMFriend.Services
@@ -55,10 +57,11 @@ namespace LLMFriend.Services
                 _kernel.ImportSkill(_llmToolService, "tools");
 
                 // Execute the pipeline with timeout
+                using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
+                timeoutCts.CancelAfter(_config.TimeForExpectedReplyInConversation);
                 var response = await _kernel.RunAsync(
                     pipelineInput,
-                    cancellation: _cts.Token,
-                    timeout: _config.TimeForExpectedReplyInConversation
+                    cancellation: timeoutCts.Token
                 );
 
                 // If the response indicates timeout, send a special message to the LLM
