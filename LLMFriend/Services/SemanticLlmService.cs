@@ -1,4 +1,6 @@
+using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -13,17 +15,20 @@ namespace LLMFriend.Services
         private readonly PersonalityService _personalityService;
         private readonly Kernel _kernel;
         private readonly IChatCompletionService _chat;
+        private readonly IOptionsMonitor<ConfigurationModel> _options;
         private readonly ILogger<SemanticLlmService> _logger;
 
         public SemanticLlmService(Kernel kernel,
             ILlmToolService llmToolService,
             ILogger<SemanticLlmService> logger,
-            PersonalityService personalityService)
+            PersonalityService personalityService,
+            IOptionsMonitor<ConfigurationModel> options)
         {
             _kernel = kernel;
             _llmToolService = llmToolService;
             _logger = logger;
             _personalityService = personalityService;
+            _options = options;
             _chat = _kernel.GetRequiredService<IChatCompletionService>();
         }
 
@@ -74,18 +79,22 @@ namespace LLMFriend.Services
 
         public async Task<ChatHistory> ContinueConversationAsync(ChatHistory chatHistory, ConversationContinuation details)
         {
+            var choice = _options.CurrentValue.EnableToolUse
+                ? FunctionChoiceBehavior.Auto()
+                : FunctionChoiceBehavior.None();
+
+            var executionSettings = new OpenAIPromptExecutionSettings
+            {
+                FunctionChoiceBehavior = choice
+            };
+
+            if (details.MessageTookTooLong)
+            {
+                chatHistory.AddDeveloperMessage($"The user took too long to send their last message ({details.TimeForUserMessage}).");
+            }
+            
             try
             {
-                var executionSettings = new OpenAIPromptExecutionSettings
-                {
-                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-                };
-
-                if (details.MessageTookTooLong)
-                {
-                    chatHistory.AddDeveloperMessage($"The user took too long to send their last message ({details.TimeForUserMessage}).");
-                }
-                
                 var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
 
                 chatHistory.Add(result);
@@ -139,10 +148,14 @@ namespace LLMFriend.Services
             {
                 chatHistory.AddUserMessage(context.UserStartingMessage);
             }
+
+            var choice = _options.CurrentValue.EnableToolUse
+                ? FunctionChoiceBehavior.Auto()
+                : FunctionChoiceBehavior.None();
             
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                FunctionChoiceBehavior = choice
             };
 
             var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);

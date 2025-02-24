@@ -4,6 +4,7 @@ namespace LLMFriend.Configuration
 {
     public class ConfigurationModel
     {
+        public bool EnableToolUse { get; set; }
         public string[] AllowedFilePathsForSearch { get; set; }
         public string CrontabForScheduledInvocation { get; set; }
         public double ProbabilityOfStartingConversationsAutonomously { get; set; }
