@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO.Abstractions;
 using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 
 namespace LLMFriend.Services
 {
@@ -20,6 +22,8 @@ namespace LLMFriend.Services
             _config = config.CurrentValue;
         }
 
+        [KernelFunction]
+        [Description("Gets the list of files the assistant is allowed to view.")]
         public List<string> ReadEnvironment()
         {
             var filePaths = new List<string>();
@@ -42,6 +46,8 @@ namespace LLMFriend.Services
             return filePaths;
         }
 
+        [KernelFunction]
+        [Description("Gets the content of a file for the assistant.")]
         public string ReadFile(string filepath)
         {
             try
@@ -84,6 +90,8 @@ namespace LLMFriend.Services
             }
         }
 
+        [KernelFunction]
+        [Description("Updates the assistant's personality.")]
         public void UpdatePersonality(string newPersonality)
         {
             try

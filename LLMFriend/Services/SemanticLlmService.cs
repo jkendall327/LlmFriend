@@ -47,6 +47,7 @@ namespace LLMFriend.Services
 
                 prompt += $" Current Time: {systemTime}\nUsername: {username}\nFiles: {fileList}\n";
 
+                _kernel.ImportPluginFromObject(_llmToolService);
                 // Define the pipeline
                 var pipelineInput = prompt;
 
