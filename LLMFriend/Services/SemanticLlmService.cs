@@ -2,6 +2,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using LLMFriend.Configuration;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace LLMFriend.Services
 {
@@ -37,7 +39,7 @@ namespace LLMFriend.Services
                 var fileList = string.Join(", ", context.FileList);
 
                 // Create the prompt based on invocation type
-                string prompt = context.Type switch
+                var prompt = context.Type switch
                 {
                     InvocationType.Scheduled => "This invocation is scheduled.",
                     InvocationType.Autonomous => "This invocation is autonomous.",
@@ -48,20 +50,27 @@ namespace LLMFriend.Services
                 prompt += $" Current Time: {systemTime}\nUsername: {username}\nFiles: {fileList}\n";
 
                 _kernel.ImportPluginFromObject(_llmToolService);
-                // Define the pipeline
-                var pipelineInput = prompt;
-
-                // Add tool capabilities
-                /*_kernel.ImportSkill(_llmToolService, "tools");
-
-                // Execute the pipeline with timeout
+                
+                var chatHistory = new ChatHistory
+                {
+                    new(AuthorRole.System, $"You are a helpful assistant. {prompt}")
+                };
+                
+                var executionSettings = new OpenAIPromptExecutionSettings
+                {
+                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                };
+                
+                var service = _kernel.GetRequiredService<IChatCompletionService>();
+                var result = await service.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
+                
+                chatHistory.Add(result);
+                
+                // Set up timer for expected user input...
                 using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token);
                 timeoutCts.CancelAfter(_config.TimeForExpectedReplyInConversation);
-                var response = await _kernel.InvokeAsync(
-                    pipelineInput,
-                    cancellationToken: timeoutCts.Token
-                );
 
+                /*
                 // If the response indicates timeout, send a special message to the LLM
                 if (response.Contains("timeout", StringComparison.OrdinalIgnoreCase))
                 {
