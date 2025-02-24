@@ -23,9 +23,14 @@ services.AddSingleton<PersonalityService>();
 services.AddSingleton<ILlmService, SemanticLlmService>();
 services.AddSingleton<ChatService>();
 
-var apiKey = host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("OpenAIApiKey").Value;
-services.AddOpenAIChatCompletion("gpt-4o", apiKey);
+var apiKey = host.Configuration.GetRequiredSection("ConfigurationModel").GetRequiredSection("DeepseekApiKey").Value;
 services.AddSingleton<Kernel>();
+
+#pragma warning disable SKEXP0010
+services.AddOpenAIChatCompletion("deepseek-reasoner",
+    new Uri("https://api.deepseek.com"),
+    apiKey);
+#pragma warning restore SKEXP0010
 
 var app = host.Build();
 
