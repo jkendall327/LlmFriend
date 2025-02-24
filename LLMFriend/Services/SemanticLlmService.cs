@@ -87,35 +87,4 @@ namespace LLMFriend.Services
             }
         }
     }
-
-    // Simple logger adapter for Semantic Kernel
-    public class SemanticKernelLogger
-    {
-        private readonly ILogger _logger;
-
-        public SemanticKernelLogger(ILogger logger)
-        {
-            _logger = logger;
-        }
-
-        public void LogError(string message)
-        {
-            _logger.LogError(message);
-        }
-
-        public void LogError(string message, Exception ex)
-        {
-            _logger.LogError(ex, message);
-        }
-
-        public void LogInformation(string message)
-        {
-            _logger.LogInformation(message);
-        }
-
-        public void LogWarning(string message)
-        {
-            _logger.LogWarning(message);
-        }
-    }
 }
