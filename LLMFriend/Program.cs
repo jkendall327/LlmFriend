@@ -19,6 +19,7 @@ services.AddSingleton<IClock, Clock>();
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<ILlmToolService, LlmToolService>();
 services.AddSingleton<ISchedulingService, SchedulingService>();
+services.AddSingleton<PersonalityService>();
 services.AddSingleton<ILlmService, SemanticLlmService>();
 services.AddSingleton<ChatService>();
 
@@ -32,3 +33,8 @@ var chat = app.Services.GetRequiredService<ChatService>();
 
 // Pass user's starting message if initiated by them
 await chat.RunChatAsync(args.FirstOrDefault());
+
+
+// a daemon that invokes this app.
+// first arg is the invocation type
+// second arg is user message?

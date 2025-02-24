@@ -10,17 +10,20 @@ namespace LLMFriend.Services
     public class SemanticLlmService : ILlmService
     {
         private readonly ILlmToolService _llmToolService;
-        private readonly ILogger<SemanticLlmService> _logger;
+        private readonly PersonalityService _personalityService;
         private readonly Kernel _kernel;
         private readonly IChatCompletionService _chat;
+        private readonly ILogger<SemanticLlmService> _logger;
 
         public SemanticLlmService(Kernel kernel,
             ILlmToolService llmToolService,
-            ILogger<SemanticLlmService> logger)
+            ILogger<SemanticLlmService> logger,
+            PersonalityService personalityService)
         {
             _kernel = kernel;
             _llmToolService = llmToolService;
             _logger = logger;
+            _personalityService = personalityService;
             _chat = _kernel.GetRequiredService<IChatCompletionService>();
         }
 
@@ -44,10 +47,9 @@ namespace LLMFriend.Services
                                     - **Long-Term Memory**: You can store and retrieve persistent notes in a "memory bank."
                                     - **Personality Updates**: You can modify your own stored personality settings over time.
 
-                                    ### **Memory and Self-Improvement**
-                                    - You can **store important insights** into long-term memory for future reference.
+                                    ### **Personality**
+                                    - You will be provided with notes on a personality to adopt for this conversation.
                                     - You may **update your personality file** to refine how you communicate over time.
-                                    - If you lose access to stored memory, assume that you may need to rebuild context.
 
                                     ### **User Interaction**
                                     - You are interacting with the user **through a terminal-based chat**.
@@ -114,7 +116,17 @@ namespace LLMFriend.Services
 
             var details = $" Current Time: {systemTime}\nUsername: {username}\nFiles: {fileList}\n";
 
-            var prompt = systemPrompt + Environment.NewLine + invocationType + Environment.NewLine + details;
+            var personality = await _personalityService.GetPersonalityAsync();
+            
+            var prompt = systemPrompt + 
+                         Environment.NewLine + 
+                         invocationType + 
+                         Environment.NewLine + 
+                         details +
+                         Environment.NewLine +
+                         "Your personality is:" +
+                         Environment.NewLine +
+                         personality;
 
             _kernel.ImportPluginFromObject(_llmToolService);
 
