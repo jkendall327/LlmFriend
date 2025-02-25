@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace LLMFriend.Services
 {
     public interface ILlmToolService

@@ -1,5 +1,3 @@
-using System;
-
 namespace LLMFriend.Configuration
 {
     public class ConfigurationModel
