@@ -1,18 +1,33 @@
+using System.IO.Abstractions;
+using LLMFriend.Configuration;
 using LLMFriend.Web.Components;
 using LLMFriend.Web.Services;
-using LLMFriend;
 using LLMFriend.Services;
+using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHostedService<ScheduledBackgroundService>();
 builder.Services.AddSingleton<ChatNotificationService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddSingleton<ILlmService, SemanticLlmService>();
+builder.Services.AddSingleton<PersonalityService>();
 builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IFileSystem, FileSystem>();
+
+var configurationSection = builder.Configuration.GetRequiredSection("ConfigurationModel");
+
+builder.Services.Configure<ConfigurationModel>(configurationSection);
+
+var apiKey = configurationSection.GetRequiredSection("DeepseekApiKey").Value;
+builder.Services.AddSingleton<Kernel>();
+
+#pragma warning disable SKEXP0010
+builder.Services.AddOpenAIChatCompletion("deepseek-reasoner",
+    new Uri("https://api.deepseek.com"),
+    apiKey);
 
 var app = builder.Build();
 
