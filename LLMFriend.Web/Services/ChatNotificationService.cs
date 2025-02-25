@@ -4,17 +4,12 @@ namespace LLMFriend.Web.Services;
 
 public class ChatNotificationService
 {
-    private readonly Channel<DateTime> _channel;
+    private readonly Channel<DateTimeOffset> _channel = Channel.CreateUnbounded<DateTimeOffset>();
 
-    public ChatNotificationService()
-    {
-        _channel = Channel.CreateUnbounded<DateTime>();
-    }
-
-    public ChannelReader<DateTime> GetReader() => _channel.Reader;
+    public ChannelReader<DateTimeOffset> GetReader() => _channel.Reader;
     
-    public async Task NotifyNewChatRequested(DateTime timestamp)
+    public async Task NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default)
     {
-        await _channel.Writer.WriteAsync(timestamp);
+        await _channel.Writer.WriteAsync(timestamp, token);
     }
 }

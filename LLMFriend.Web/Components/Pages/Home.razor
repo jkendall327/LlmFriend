@@ -1,6 +1,9 @@
 ﻿@page "/"
 @using LLMFriend.Web.Components.Chat
+@using LLMFriend.Web.Services
 @rendermode InteractiveServer
+@implements IDisposable
+@inject ChatNotificationService NotificationService
 
 <PageTitle>LLM Friend</PageTitle>
 
