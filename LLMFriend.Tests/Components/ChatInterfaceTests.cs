@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Bunit;
 using LLMFriend.Services;
 using LLMFriend.Web.Components.Chat;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Moq;
@@ -52,7 +54,7 @@ public class ChatInterfaceTests : TestContext
         
         // Act
         cut.Find(".message-input").Change("Hello");
-        await cut.Find(".send-button").ClickAsync();
+        await cut.Find(".send-button").ClickAsync(new MouseEventArgs());
         
         // Assert
         var messages = cut.FindAll(".message");
@@ -67,7 +69,7 @@ public class ChatInterfaceTests : TestContext
         // Arrange
         bool callbackInvoked = false;
         var cut = RenderComponent<ChatInterface>(parameters => 
-            parameters.Add(p => p.OnClose, EventCallback.Factory.Create(this, () => callbackInvoked = true)));
+            parameters.Add(p => p.OnClose, Microsoft.AspNetCore.Components.EventCallback.Factory.Create(this, () => callbackInvoked = true)));
         
         // Act
         cut.Find(".close-chat-button").Click();
@@ -105,7 +107,7 @@ public class ChatInterfaceTests : TestContext
         
         // Act
         cut.Find(".message-input").Change("Test message");
-        await cut.Find(".message-input").KeyPressAsync(new KeyboardEventArgs { Key = "Enter" });
+        await cut.Find(".message-input").KeyPressAsync(new KeyboardEventArgs { Key = "Enter", Type = "keypress" });
         
         // Assert
         var messages = cut.FindAll(".message");
