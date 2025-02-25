@@ -6,23 +6,21 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using System.Threading.Channels;
+using LLMFriend.Services;
 
 namespace LLMFriend.Tests.Components;
 
 public class HomePageTests : TestContext
 {
-    private readonly ChatNotificationService _notificationService = Substitute.For<ChatNotificationService>();
-    private readonly Channel<DateTimeOffset> _testChannel;
+    private readonly ChatNotificationService _notificationService = new();
 
     public HomePageTests()
     {
-        _testChannel = Channel.CreateUnbounded<DateTimeOffset>();
-        _notificationService.GetReader().Returns(_testChannel.Reader);
         Services.AddSingleton(_notificationService);
+        Services.AddSingleton(Substitute.For<IChatService>());
         
-        // Register the ChatInterface component for rendering
+        // Configure JSInterop for component rendering
         JSInterop.Mode = JSRuntimeMode.Loose;
-        Services.AddSingleton(Substitute.For<IServiceProvider>());
     }
 
     [Fact]
@@ -76,11 +74,11 @@ public class HomePageTests : TestContext
         // Initially no chats
         Assert.Empty(cut.FindComponents<ChatInterface>());
         
-        // Send a notification
-        await _testChannel.Writer.WriteAsync(DateTimeOffset.Now);
+        // Send a notification through the actual service
+        await _notificationService.NotifyNewChatRequested(DateTimeOffset.Now);
         
         // Wait for the component to process the notification
-        cut.WaitForState(() => cut.FindComponents<ChatInterface>().Count > 0);
+        cut.WaitForState(() => cut.FindComponents<ChatInterface>().Count > 0, TimeSpan.FromSeconds(1));
         
         // Verify a new chat was created
         Assert.Single(cut.FindComponents<ChatInterface>());
