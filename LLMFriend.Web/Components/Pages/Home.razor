@@ -1,4 +1,5 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 
 <PageTitle>LLM Friend</PageTitle>
 
@@ -16,12 +17,45 @@
         <input type="text" 
                @bind="_currentMessage" 
                @bind:event="oninput"
-               @onkeypress="HandleKeyPress"
+               @onkeypress="@HandleKeyPress"
                placeholder="Type your message..."
                class="message-input" />
         <button @onclick="SendMessage" class="send-button">Send</button>
     </div>
 </div>
+
+@code {
+    private List<ChatMessage> _messages = new();
+    private string _currentMessage = "";
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_currentMessage))
+            return;
+
+        // Add user message
+        _messages.Add(new ChatMessage { Content = _currentMessage, IsUser = true });
+
+        // Simulate assistant response
+        _messages.Add(new ChatMessage { Content = $"You said: {_currentMessage}", IsUser = false });
+
+        _currentMessage = "";
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private class ChatMessage
+    {
+        public string Content { get; set; } = "";
+        public bool IsUser { get; set; }
+    }
+}
 
 <style>
     .chat-container {
@@ -85,36 +119,3 @@
         background-color: #0056b3;
     }
 </style>
-
-@code {
-    private List<ChatMessage> _messages = new();
-    private string _currentMessage = "";
-
-    private async Task SendMessage()
-    {
-        if (string.IsNullOrWhiteSpace(_currentMessage))
-            return;
-
-        // Add user message
-        _messages.Add(new ChatMessage { Content = _currentMessage, IsUser = true });
-        
-        // Simulate assistant response
-        _messages.Add(new ChatMessage { Content = $"You said: {_currentMessage}", IsUser = false });
-        
-        _currentMessage = "";
-    }
-
-    private async Task HandleKeyPress(KeyboardEventArgs e)
-    {
-        if (e.Key == "Enter")
-        {
-            await SendMessage();
-        }
-    }
-
-    private class ChatMessage
-    {
-        public string Content { get; set; } = "";
-        public bool IsUser { get; set; }
-    }
-}
