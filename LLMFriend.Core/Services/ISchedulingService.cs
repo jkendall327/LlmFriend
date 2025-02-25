@@ -4,6 +4,6 @@ namespace LLMFriend.Services
 {
     public interface ISchedulingService
     {
-        DateTime GetNextInvocationTime();
+        DateTimeOffset GetNextInvocationTime();
     }
 }

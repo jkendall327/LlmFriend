@@ -14,7 +14,7 @@ namespace LLMFriend.Services
     public class ChatService
     {
         private readonly ILlmToolService _llmToolService;
-        private readonly IClock _clock;
+        private readonly TimeProvider _clock;
         private readonly ILlmService _llmService;
         private readonly IOptionsMonitor<ConfigurationModel> _configMonitor;
         private readonly ILogger<ChatService> _logger;
@@ -24,7 +24,7 @@ namespace LLMFriend.Services
             IOptionsMonitor<ConfigurationModel> configMonitor,
             ILogger<ChatService> logger,
             ILlmService llmService,
-            IClock clock)
+            TimeProvider clock)
         {
             _llmToolService = llmToolService;
             _configMonitor = configMonitor;
@@ -46,7 +46,7 @@ namespace LLMFriend.Services
             
             var invocationContext = new InvocationContext
             {
-                InvocationTime = _clock.GetNow(),
+                InvocationTime = _clock.GetLocalNow(),
                 Type = type,
                 Username = Environment.UserName,
                 FileList = _llmToolService.ReadEnvironment().ToArray(),

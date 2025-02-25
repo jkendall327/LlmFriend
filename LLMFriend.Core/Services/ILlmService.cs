@@ -11,7 +11,7 @@ namespace LLMFriend.Services
 
     public class InvocationContext
     {
-        public DateTime InvocationTime { get; set; }
+        public DateTimeOffset InvocationTime { get; set; }
         public InvocationType Type { get; set; }
         public required string Username { get; set; }
         public string[] FileList { get; set; } = [];

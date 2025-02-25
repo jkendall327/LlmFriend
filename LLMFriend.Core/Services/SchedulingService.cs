@@ -9,11 +9,11 @@ namespace LLMFriend.Services
     public class SchedulingService : ISchedulingService
     {
         private readonly ConfigurationModel _config;
-        private readonly IClock _clock;
+        private readonly TimeProvider _clock;
         private readonly ILogger<SchedulingService> _logger;
         private readonly CronExpression _cronExpression;
 
-        public SchedulingService(IOptionsMonitor<ConfigurationModel> config, IClock clock, ILogger<SchedulingService> logger)
+        public SchedulingService(IOptionsMonitor<ConfigurationModel> config, TimeProvider clock, ILogger<SchedulingService> logger)
         {
             _config = config.CurrentValue;
             _clock = clock;
@@ -30,11 +30,11 @@ namespace LLMFriend.Services
             }
         }
 
-        public DateTime GetNextInvocationTime()
+        public DateTimeOffset GetNextInvocationTime()
         {
             try
             {
-                var currentTime = _clock.GetNow();
+                var currentTime = _clock.GetLocalNow();
                 var nextUtc = _cronExpression.GetNextOccurrence(currentTime, TimeZoneInfo.Local);
 
                 if (nextUtc.HasValue)

@@ -15,7 +15,6 @@ var services = host.Services;
 
 services.Configure<ConfigurationModel>(host.Configuration.GetSection("ConfigurationModel"));
 
-services.AddSingleton<IClock, Clock>();
 services.AddSingleton<IFileSystem, FileSystem>();
 services.AddSingleton<ILlmToolService, LlmToolService>();
 services.AddSingleton<ISchedulingService, SchedulingService>();
