@@ -11,16 +11,13 @@
     }
     else
     {
-        <div class="chat-controls">
-            <button class="new-chat-button" @onclick="CreateNewChat">New Chat</button>
-            <button class="close-chat-button" @onclick="CloseCurrentChat">Close Chat</button>
-        </div>
+        <button class="new-chat-button" @onclick="CreateNewChat">New Chat</button>
     }
 </div>
 
 @foreach (var chatId in _chats)
 {
-    <ChatInterface @key="chatId" />
+    <ChatInterface @key="chatId" OnClose="@(() => CloseChat(chatId))" />
 }
 
 <style>
@@ -31,51 +28,31 @@
         justify-content: center;
     }
 
-    .chat-controls {
-        display: flex;
-        gap: 10px;
-    }
-
-    .new-chat-button, .close-chat-button {
+    .new-chat-button {
         padding: 10px 20px;
         border-radius: 5px;
         border: none;
         cursor: pointer;
         font-weight: 500;
-    }
-
-    .new-chat-button {
         background-color: #28a745;
-        color: white;
-    }
-
-    .close-chat-button {
-        background-color: #dc3545;
         color: white;
     }
 
     .new-chat-button:hover {
         background-color: #218838;
     }
-
-    .close-chat-button:hover {
-        background-color: #c82333;
-    }
 </style>
 
 @code {
-    private List<Guid> _chats = new();
+    private readonly List<Guid> _chats = [];
 
     private void CreateNewChat()
     {
         _chats.Add(Guid.NewGuid());
     }
 
-    private void CloseCurrentChat()
+    private void CloseChat(Guid chatId)
     {
-        if (_chats.Any())
-        {
-            _chats.RemoveAt(_chats.Count - 1);
-        }
+        _chats.Remove(chatId);
     }
 }
