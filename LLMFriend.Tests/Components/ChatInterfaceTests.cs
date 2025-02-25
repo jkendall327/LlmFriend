@@ -8,23 +8,23 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
-using Moq;
+using NSubstitute;
 using Xunit;
 
 namespace LLMFriend.Tests.Components;
 
 public class ChatInterfaceTests : TestContext
 {
-    private readonly Mock<IChatService> _mockChatService;
-    private readonly Mock<IJSRuntime> _mockJsRuntime;
+    private readonly IChatService _chatService;
+    private readonly IJSRuntime _jsRuntime;
     
     public ChatInterfaceTests()
     {
-        _mockChatService = new Mock<IChatService>();
-        _mockJsRuntime = new Mock<IJSRuntime>();
+        _chatService = Substitute.For<IChatService>();
+        _jsRuntime = Substitute.For<IJSRuntime>();
         
-        Services.AddSingleton(_mockChatService.Object);
-        Services.AddSingleton(_mockJsRuntime.Object);
+        Services.AddSingleton(_chatService);
+        Services.AddSingleton(_jsRuntime);
     }
     
     [Fact]
@@ -42,12 +42,12 @@ public class ChatInterfaceTests : TestContext
     public async Task SendButton_ShouldSendMessage_WhenClicked()
     {
         // Arrange
-        _mockChatService
-            .Setup(x => x.GetStreamingResponseAsync(
-                It.IsAny<Guid>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
-                It.IsAny<CancellationToken>()))
+        _chatService
+            .GetStreamingResponseAsync(
+                Arg.Any<Guid>(), 
+                Arg.Any<string>(), 
+                Arg.Any<bool>(), 
+                Arg.Any<CancellationToken>())
             .Returns(GetMockResponseStream(new[] { "Hello", " there!" }));
         
         var cut = RenderComponent<ChatInterface>();
@@ -82,12 +82,12 @@ public class ChatInterfaceTests : TestContext
     public async Task EnterKey_ShouldSendMessage()
     {
         // Arrange
-        _mockChatService
-            .Setup(x => x.GetStreamingResponseAsync(
-                It.IsAny<Guid>(), 
-                It.IsAny<string>(), 
-                It.IsAny<bool>(), 
-                It.IsAny<CancellationToken>()))
+        _chatService
+            .GetStreamingResponseAsync(
+                Arg.Any<Guid>(), 
+                Arg.Any<string>(), 
+                Arg.Any<bool>(), 
+                Arg.Any<CancellationToken>())
             .Returns(GetMockResponseStream(new[] { "Response" }));
         
         var cut = RenderComponent<ChatInterface>();
