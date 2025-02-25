@@ -79,12 +79,21 @@
         await ScrollToBottom();
 
         // Simulate thinking time
-        await Task.Delay(2000);
-
-        // Add assistant response
-        _messages.Add(new ChatMessage { Content = $"You said: {userMessage}", IsUser = false });
+        await Task.Delay(1000);
         _isTyping = false;
-        await ScrollToBottom();
+
+        // Simulate streaming response
+        await StreamResponse(SimulateStreamingResponse(userMessage));
+    }
+
+    private async IAsyncEnumerable<string> SimulateStreamingResponse(string userMessage)
+    {
+        var response = $"You said: {userMessage}";
+        foreach (var word in response.Split(' '))
+        {
+            await Task.Delay(200); // Simulate network delay
+            yield return word + " ";
+        }
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
@@ -99,6 +108,24 @@
     {
         public string Content { get; set; } = "";
         public bool IsUser { get; set; }
+        public bool IsComplete { get; set; } = true;
+    }
+
+    private async Task StreamResponse(IAsyncEnumerable<string> responseStream)
+    {
+        var assistantMessage = new ChatMessage { Content = "", IsUser = false, IsComplete = false };
+        _messages.Add(assistantMessage);
+        await ScrollToBottom();
+
+        await foreach (var chunk in responseStream)
+        {
+            assistantMessage.Content += chunk;
+            StateHasChanged();
+            await ScrollToBottom();
+        }
+
+        assistantMessage.IsComplete = true;
+        StateHasChanged();
     }
 }
 
