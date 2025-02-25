@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LLMFriend", "LLMFriend\LLMF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LLMFriend.Web", "LLMFriend.Web\LLMFriend.Web.csproj", "{61AF57C1-9309-46B3-8226-031036ACACEC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LLMFriend.Core", "LLMFriend.Core\LLMFriend.Core.csproj", "{BDEC10B9-5A95-44E0-B93D-2CE4AC1B51A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{61AF57C1-9309-46B3-8226-031036ACACEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61AF57C1-9309-46B3-8226-031036ACACEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61AF57C1-9309-46B3-8226-031036ACACEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDEC10B9-5A95-44E0-B93D-2CE4AC1B51A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDEC10B9-5A95-44E0-B93D-2CE4AC1B51A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDEC10B9-5A95-44E0-B93D-2CE4AC1B51A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDEC10B9-5A95-44E0-B93D-2CE4AC1B51A8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -10,4 +10,8 @@
         <PackageReference Include="Cronos" Version="0.8.3" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LLMFriend.Core\LLMFriend.Core.csproj" />
+    </ItemGroup>
+
 </Project>

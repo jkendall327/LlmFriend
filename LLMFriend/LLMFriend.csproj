@@ -25,4 +25,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LLMFriend.Core\LLMFriend.Core.csproj" />
+    </ItemGroup>
+
 </Project>
