@@ -49,9 +49,15 @@
     private string _currentMessage = "";
     private ElementReference _chatFeedDiv;
     private bool _isTyping;
+    private readonly Guid _chatId = Guid.NewGuid();
 
     [Parameter]
     public EventCallback OnClose { get; set; }
+
+    public void Dispose()
+    {
+        ChatService.RemoveChat(_chatId);
+    }
 
     private async Task ScrollToBottom()
     {
@@ -84,8 +90,22 @@
 
         try
         {
-            // Get streaming response from ChatService
-            await StreamResponse(ChatService.GetStreamingResponseAsync(userMessage, _messages.Count == 1));
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            await StreamResponse(ChatService.GetStreamingResponseAsync(
+                _chatId,
+                userMessage, 
+                _messages.Count == 1,
+                cts.Token));
+        }
+        catch (OperationCanceledException)
+        {
+            // Handle timeout gracefully
+            _messages.Add(new ChatMessage 
+            { 
+                Content = "The response timed out. Please try again.",
+                IsUser = false,
+                IsError = true
+            });
         }
         finally
         {
@@ -106,6 +126,7 @@
         public string Content { get; set; } = "";
         public bool IsUser { get; set; }
         public bool IsComplete { get; set; } = true;
+        public bool IsError { get; set; }
     }
 
     private async Task StreamResponse(IAsyncEnumerable<string> responseStream)
@@ -181,6 +202,12 @@
     .assistant-message {
         background-color: #f0f0f0;
         margin-right: auto;
+    }
+
+    .message.assistant-message:has(.message-content:has(:first-child.error)) {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        color: #856404;
     }
 
     .input-container {

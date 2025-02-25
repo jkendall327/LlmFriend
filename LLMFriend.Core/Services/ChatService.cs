@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using LLMFriend.Services;
@@ -33,16 +34,16 @@ namespace LLMFriend.Services
             _clock = clock;
         }
 
-        private ChatHistory? _history;
+        private readonly Dictionary<Guid, ChatHistory> _chatHistories = new();
 
-        public async Task<string> InitiateChatAsync(string? userMessage, CancellationToken cancellationToken = default)
+        public async Task<(string Response, bool TimedOut)> InitiateChatAsync(
+            Guid chatId, 
+            string? userMessage, 
+            CancellationToken cancellationToken = default)
         {
-            var type = InvocationType.Autonomous;
-            
-            if (!string.IsNullOrWhiteSpace(userMessage))
-            {
-                type = InvocationType.UserInitiated;
-            }
+            var type = string.IsNullOrWhiteSpace(userMessage) 
+                ? InvocationType.Autonomous 
+                : InvocationType.UserInitiated;
             
             var invocationContext = new InvocationContext
             {
@@ -53,36 +54,73 @@ namespace LLMFriend.Services
                 UserStartingMessage = userMessage
             };
 
-            _history = await _llmService.InvokeLlmAsync(invocationContext);
-            return _history.Last().Content;
+            var history = await _llmService.InvokeLlmAsync(invocationContext);
+            _chatHistories[chatId] = history;
+            
+            return (history.Last().Content, false);
         }
 
-        public async Task<string> ContinueChatAsync(string userMessage, CancellationToken cancellationToken = default)
+        public async Task<(string Response, bool TimedOut)> ContinueChatAsync(
+            Guid chatId,
+            string userMessage, 
+            CancellationToken cancellationToken = default)
         {
-            if (_history == null)
+            if (!_chatHistories.TryGetValue(chatId, out var history))
             {
-                throw new InvalidOperationException("Chat must be initiated before continuing");
+                throw new InvalidOperationException($"Chat {chatId} not found");
             }
 
             var stopwatch = Stopwatch.StartNew();
-            _history.AddUserMessage(userMessage);
+            history.AddUserMessage(userMessage);
 
-            var continuation = new ConversationContinuation(stopwatch.Elapsed, false);
-            _history = await _llmService.ContinueConversationAsync(_history, continuation);
-            
-            return _history.Last().Content;
+            var timeoutTask = Task.Delay(_configMonitor.CurrentValue.TimeForExpectedReplyInConversation, cancellationToken);
+            var responseTask = _llmService.ContinueConversationAsync(
+                history, 
+                new ConversationContinuation(stopwatch.Elapsed, false));
+
+            var completedTask = await Task.WhenAny(responseTask, timeoutTask);
+            var timedOut = completedTask == timeoutTask;
+
+            if (timedOut)
+            {
+                // Let the LLM know about the timeout
+                history = await _llmService.ContinueConversationAsync(
+                    history,
+                    new ConversationContinuation(stopwatch.Elapsed, true));
+            }
+            else
+            {
+                history = await responseTask;
+            }
+
+            _chatHistories[chatId] = history;
+            return (history.Last().Content, timedOut);
         }
 
-        public async IAsyncEnumerable<string> GetStreamingResponseAsync(string userMessage, bool isInitial = false)
+        public void RemoveChat(Guid chatId)
         {
-            // Simulate streaming for now
-            var response = isInitial 
-                ? await InitiateChatAsync(userMessage)
-                : await ContinueChatAsync(userMessage);
+            _chatHistories.Remove(chatId);
+        }
+
+        public async IAsyncEnumerable<string> GetStreamingResponseAsync(
+            Guid chatId,
+            string userMessage, 
+            bool isInitial = false,
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var (response, timedOut) = isInitial
+                ? await InitiateChatAsync(chatId, userMessage, cancellationToken)
+                : await ContinueChatAsync(chatId, userMessage, cancellationToken);
+
+            if (timedOut)
+            {
+                yield return "[Response timed out] ";
+            }
 
             foreach (var word in response.Split(' '))
             {
-                await Task.Delay(100);
+                if (cancellationToken.IsCancellationRequested) yield break;
+                await Task.Delay(50, cancellationToken);
                 yield return word + " ";
             }
         }
