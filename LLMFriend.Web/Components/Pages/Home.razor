@@ -4,7 +4,7 @@
 <PageTitle>LLM Friend</PageTitle>
 
 <div class="chat-container">
-    <div class="chat-feed">
+    <div class="chat-feed" @ref="_chatFeedDiv">
         @foreach (var message in _messages)
         {
             <div class="message @(message.IsUser ? "user-message" : "assistant-message")">
@@ -27,6 +27,19 @@
 @code {
     private List<ChatMessage> _messages = new();
     private string _currentMessage = "";
+    private ElementReference _chatFeedDiv;
+
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("scrollToBottom", _chatFeedDiv);
+        }
+        catch
+        {
+            // Ignore any JavaScript interop errors
+        }
+    }
 
     private async Task SendMessage()
     {
@@ -40,6 +53,7 @@
         _messages.Add(new ChatMessage { Content = $"You said: {_currentMessage}", IsUser = false });
 
         _currentMessage = "";
+        await ScrollToBottom();
     }
 
     private async Task HandleKeyPress(KeyboardEventArgs e)
@@ -119,3 +133,9 @@
         background-color: #0056b3;
     }
 </style>
+
+<script>
+    window.scrollToBottom = (element) => {
+        element.scrollTop = element.scrollHeight;
+    }
+</script>
