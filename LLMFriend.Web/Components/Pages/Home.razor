@@ -1,7 +1,120 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>LLM Friend</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="chat-container">
+    <div class="chat-feed">
+        @foreach (var message in _messages)
+        {
+            <div class="message @(message.IsUser ? "user-message" : "assistant-message")">
+                <div class="message-content">@message.Content</div>
+            </div>
+        }
+    </div>
+    
+    <div class="input-container">
+        <input type="text" 
+               @bind="_currentMessage" 
+               @bind:event="oninput"
+               @onkeypress="HandleKeyPress"
+               placeholder="Type your message..."
+               class="message-input" />
+        <button @onclick="SendMessage" class="send-button">Send</button>
+    </div>
+</div>
 
-Welcome to your new app.
+<style>
+    .chat-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+    }
+
+    .chat-feed {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .message {
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 10px;
+        max-width: 80%;
+    }
+
+    .user-message {
+        background-color: #007bff;
+        color: white;
+        margin-left: auto;
+    }
+
+    .assistant-message {
+        background-color: #f0f0f0;
+        margin-right: auto;
+    }
+
+    .input-container {
+        display: flex;
+        gap: 10px;
+    }
+
+    .message-input {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .send-button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .send-button:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+@code {
+    private List<ChatMessage> _messages = new();
+    private string _currentMessage = "";
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_currentMessage))
+            return;
+
+        // Add user message
+        _messages.Add(new ChatMessage { Content = _currentMessage, IsUser = true });
+        
+        // Simulate assistant response
+        _messages.Add(new ChatMessage { Content = $"You said: {_currentMessage}", IsUser = false });
+        
+        _currentMessage = "";
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
+
+    private class ChatMessage
+    {
+        public string Content { get; set; } = "";
+        public bool IsUser { get; set; }
+    }
+}
