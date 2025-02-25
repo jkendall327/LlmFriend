@@ -1,9 +1,12 @@
 using LLMFriend.Web.Components;
+using LLMFriend.Web.Services;
+using LLMFriend;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddHostedService<ScheduledBackgroundService>();
 
 var app = builder.Build();
 
