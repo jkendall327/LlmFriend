@@ -27,7 +27,9 @@
 
 <script>
     window.scrollToBottom = (element) => {
-        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        setTimeout(() => {
+            element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+        }, 100);
     }
 </script>
 
