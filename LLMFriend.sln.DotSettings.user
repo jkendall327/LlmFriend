@@ -4,5 +4,6 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fd7c10e6_002Db974_002D4284_002D87a7_002D7ccc421d8f14/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthcheckReturnsOk" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::C3E60EFD-D1E1-4DA9-ADBA-0E7A6E37C313::net9.0::LLMFriend.Tests.AppStartupTests.HealthcheckReturnsOk&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::C3E60EFD-D1E1-4DA9-ADBA-0E7A6E37C313::net9.0::LLMFriend.Tests.Components.ChatInterfaceTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

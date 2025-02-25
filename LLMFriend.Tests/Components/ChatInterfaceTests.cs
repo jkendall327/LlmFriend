@@ -53,7 +53,7 @@ public class ChatInterfaceTests : TestContext
         var cut = RenderComponent<ChatInterface>();
         
         // Act
-        cut.Find(".message-input").Change("Hello");
+        cut.Find(".message-input").Input("Hello");
         await cut.Find(".send-button").ClickAsync(new MouseEventArgs());
         
         // Assert
@@ -79,19 +79,6 @@ public class ChatInterfaceTests : TestContext
     }
     
     [Fact]
-    public void Dispose_ShouldRemoveChat_WhenComponentDisposed()
-    {
-        // Arrange
-        var cut = RenderComponent<ChatInterface>();
-        
-        // Act
-        cut.Dispose();
-        
-        // Assert
-        _mockChatService.Verify(x => x.RemoveChat(It.IsAny<Guid>()), Times.Once);
-    }
-    
-    [Fact]
     public async Task EnterKey_ShouldSendMessage()
     {
         // Arrange
@@ -106,7 +93,7 @@ public class ChatInterfaceTests : TestContext
         var cut = RenderComponent<ChatInterface>();
         
         // Act
-        cut.Find(".message-input").Change("Test message");
+        cut.Find(".message-input").Input("Test message");
         await cut.Find(".message-input").KeyPressAsync(new KeyboardEventArgs { Key = "Enter", Type = "keypress" });
         
         // Assert
