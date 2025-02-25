@@ -45,6 +45,42 @@
 
 @code {
     private readonly List<Guid> _chats = [];
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+        _ = MonitorNotificationsAsync(_cts.Token);
+    }
+
+    private async Task MonitorNotificationsAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var reader = NotificationService.GetReader();
+            while (await reader.WaitToReadAsync(cancellationToken))
+            {
+                while (reader.TryRead(out var timestamp))
+                {
+                    await InvokeAsync(() =>
+                    {
+                        CreateNewChat();
+                        StateHasChanged();
+                    });
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Normal shutdown
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
 
     private void CreateNewChat()
     {

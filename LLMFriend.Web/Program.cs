@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHostedService<ScheduledBackgroundService>();
+builder.Services.AddSingleton<ChatNotificationService>();
 
 var app = builder.Build();
 

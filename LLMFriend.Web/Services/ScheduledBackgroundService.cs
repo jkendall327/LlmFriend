@@ -9,10 +9,12 @@ public class ScheduledBackgroundService : BackgroundService
     private readonly ILogger<ScheduledBackgroundService> _logger;
     private readonly TimeProvider _clock;
     private readonly CronExpression _cronExpression;
+    private readonly ChatNotificationService _notificationService;
 
     public ScheduledBackgroundService(
         ILogger<ScheduledBackgroundService> logger,
-        TimeProvider clock)
+        TimeProvider clock,
+        ChatNotificationService notificationService)
     {
         _logger = logger;
         _clock = clock;
@@ -62,7 +64,6 @@ public class ScheduledBackgroundService : BackgroundService
     private async Task DoWorkAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Executing scheduled background work");
-        // TODO: Add actual work here
-        await Task.CompletedTask;
+        await _notificationService.NotifyNewChatRequested(_clock.GetLocalNow());
     }
 }
