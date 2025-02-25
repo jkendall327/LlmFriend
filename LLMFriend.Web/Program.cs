@@ -11,7 +11,6 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHostedService<ScheduledBackgroundService>();
 builder.Services.AddSingleton<ChatNotificationService>();
 builder.Services.AddScoped<ChatService>();
-builder.Services.AddSingleton<ILlmService, SemanticLlmService>();
 builder.Services.AddSingleton<PersonalityService>();
 builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton(TimeProvider.System);
@@ -23,6 +22,15 @@ builder.Services.Configure<ConfigurationModel>(configurationSection);
 
 var apiKey = configurationSection.GetRequiredSection("DeepseekApiKey").Value;
 builder.Services.AddSingleton<Kernel>();
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<ILlmService, FakeLlmService>();
+}
+else
+{
+    builder.Services.AddSingleton<ILlmService, SemanticLlmService>();
+}
 
 #pragma warning disable SKEXP0010
 builder.Services.AddOpenAIChatCompletion("deepseek-reasoner",
