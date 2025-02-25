@@ -11,7 +11,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHealthChecks();
 builder.Services.AddHostedService<ScheduledBackgroundService>();
 builder.Services.AddSingleton<ChatNotificationService>();
-builder.Services.AddScoped<ChatService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddSingleton<PersonalityService>();
 builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton(TimeProvider.System);
