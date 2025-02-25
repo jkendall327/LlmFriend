@@ -25,6 +25,12 @@
     </div>
 </div>
 
+<script>
+    window.scrollToBottom = (element) => {
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+
 @code {
     private List<ChatMessage> _messages = new();
     private string _currentMessage = "";
@@ -134,9 +140,3 @@
         background-color: #0056b3;
     }
 </style>
-
-<script>
-    window.scrollToBottom = (element) => {
-        element.scrollTop = element.scrollHeight;
-    }
-</script>
