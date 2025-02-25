@@ -34,8 +34,8 @@ namespace LLMFriend.Services
         }
 
         private ChatHistory? _history;
-        
-        public async Task RunChatAsync(string? userMessage, CancellationToken cancellationToken = default)
+
+        public async Task<string> InitiateChatAsync(string? userMessage, CancellationToken cancellationToken = default)
         {
             var type = InvocationType.Autonomous;
             
@@ -53,37 +53,37 @@ namespace LLMFriend.Services
                 UserStartingMessage = userMessage
             };
 
-            var timeForExpectedReplyInConversation = _configMonitor.CurrentValue.TimeForExpectedReplyInConversation;
-
             _history = await _llmService.InvokeLlmAsync(invocationContext);
-            Console.WriteLine(_history.Last());
+            return _history.Last().Content;
+        }
 
-            while (true)
+        public async Task<string> ContinueChatAsync(string userMessage, CancellationToken cancellationToken = default)
+        {
+            if (_history == null)
             {
-                var stopwatch = Stopwatch.StartNew();
-                var inputTask = Console.In.ReadLineAsync(cancellationToken).AsTask();
-                var timeoutTask = Task.Delay(timeForExpectedReplyInConversation, cancellationToken);
-                
-                var completedTask = await Task.WhenAny(inputTask, timeoutTask);
+                throw new InvalidOperationException("Chat must be initiated before continuing");
+            }
 
-                ConversationContinuation continuation;
-                
-                if (completedTask == inputTask)
-                {
-                    // User responded in time.
-                    var userInput = inputTask.Result;
-                    _history.AddUserMessage(userInput);
+            var stopwatch = Stopwatch.StartNew();
+            _history.AddUserMessage(userMessage);
 
-                    continuation = new(stopwatch.Elapsed, false);
-                }
-                else
-                {
-                    continuation = new(stopwatch.Elapsed, true);
-                }
-    
-                _history = await _llmService.ContinueConversationAsync(_history, continuation);
-                
-                Console.WriteLine(_history.Last());
+            var continuation = new ConversationContinuation(stopwatch.Elapsed, false);
+            _history = await _llmService.ContinueConversationAsync(_history, continuation);
+            
+            return _history.Last().Content;
+        }
+
+        public async IAsyncEnumerable<string> GetStreamingResponseAsync(string userMessage, bool isInitial = false)
+        {
+            // Simulate streaming for now
+            var response = isInitial 
+                ? await InitiateChatAsync(userMessage)
+                : await ContinueChatAsync(userMessage);
+
+            foreach (var word in response.Split(' '))
+            {
+                await Task.Delay(100);
+                yield return word + " ";
             }
         }
     }

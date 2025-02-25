@@ -36,7 +36,7 @@ var app = host.Build();
 var chat = app.Services.GetRequiredService<ChatService>();
 
 // Pass user's starting message if initiated by them
-await chat.RunChatAsync(args.FirstOrDefault());
+//await chat.RunChatAsync(args.FirstOrDefault());
 
 
 // a daemon that invokes this app.

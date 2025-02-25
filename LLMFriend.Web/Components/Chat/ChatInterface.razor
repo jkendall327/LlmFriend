@@ -1,4 +1,6 @@
+@using LLMFriend.Services
 @inject IJSRuntime JS
+@inject ChatService ChatService
 
 <div class="chat-container">
     <div class="chat-header">
@@ -80,21 +82,14 @@
         StateHasChanged();
         await ScrollToBottom();
 
-        // Simulate thinking time
-        await Task.Delay(1000);
-        _isTyping = false;
-
-        // Simulate streaming response
-        await StreamResponse(SimulateStreamingResponse(userMessage));
-    }
-
-    private async IAsyncEnumerable<string> SimulateStreamingResponse(string userMessage)
-    {
-        var response = $"You said: {userMessage}";
-        foreach (var word in response.Split(' '))
+        try
         {
-            await Task.Delay(200); // Simulate network delay
-            yield return word + " ";
+            // Get streaming response from ChatService
+            await StreamResponse(ChatService.GetStreamingResponseAsync(userMessage, _messages.Count == 1));
+        }
+        finally
+        {
+            _isTyping = false;
         }
     }
 
