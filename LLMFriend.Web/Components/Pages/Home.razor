@@ -4,4 +4,78 @@
 
 <PageTitle>LLM Friend</PageTitle>
 
-<ChatInterface />
+<div class="chat-management">
+    @if (!_chats.Any())
+    {
+        <button class="new-chat-button" @onclick="CreateNewChat">Start New Chat</button>
+    }
+    else
+    {
+        <div class="chat-controls">
+            <button class="new-chat-button" @onclick="CreateNewChat">New Chat</button>
+            <button class="close-chat-button" @onclick="CloseCurrentChat">Close Chat</button>
+        </div>
+    }
+</div>
+
+@foreach (var chatId in _chats)
+{
+    <ChatInterface @key="chatId" />
+}
+
+<style>
+    .chat-management {
+        max-width: 800px;
+        margin: 20px auto;
+        display: flex;
+        justify-content: center;
+    }
+
+    .chat-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .new-chat-button, .close-chat-button {
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .new-chat-button {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .close-chat-button {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .new-chat-button:hover {
+        background-color: #218838;
+    }
+
+    .close-chat-button:hover {
+        background-color: #c82333;
+    }
+</style>
+
+@code {
+    private List<Guid> _chats = new();
+
+    private void CreateNewChat()
+    {
+        _chats.Add(Guid.NewGuid());
+    }
+
+    private void CloseCurrentChat()
+    {
+        if (_chats.Any())
+        {
+            _chats.RemoveAt(_chats.Count - 1);
+        }
+    }
+}
