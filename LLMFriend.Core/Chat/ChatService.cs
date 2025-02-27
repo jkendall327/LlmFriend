@@ -47,6 +47,10 @@ public class ChatService : IChatService
         string? userMessage, 
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Initiating new chat {ChatId} with message type {MessageType}", 
+            chatId, 
+            string.IsNullOrWhiteSpace(userMessage) ? "Autonomous" : "UserInitiated");
+            
         var type = string.IsNullOrWhiteSpace(userMessage) 
             ? InvocationType.Autonomous 
             : InvocationType.UserInitiated;
@@ -62,6 +66,10 @@ public class ChatService : IChatService
 
         var history = await _llmService.InvokeLlmAsync(invocationContext);
         _chatHistories[chatId] = history;
+        
+        _logger.LogInformation("Chat {ChatId} initiated successfully with {MessageCount} messages", 
+            chatId, 
+            history.Count);
             
         return (history.Last().Content, false);
     }
@@ -73,13 +81,19 @@ public class ChatService : IChatService
     {
         if (!_chatHistories.TryGetValue(chatId, out var history))
         {
+            _logger.LogError("Attempted to continue non-existent chat {ChatId}", chatId);
             throw new InvalidOperationException($"Chat {chatId} not found");
         }
+
+        _logger.LogInformation("Continuing chat {ChatId} with message length {MessageLength}", 
+            chatId, 
+            userMessage.Length);
 
         var stopwatch = Stopwatch.StartNew();
         history.AddUserMessage(userMessage);
 
-        var timeoutTask = Task.Delay(_configMonitor.CurrentValue.TimeForExpectedReplyInConversation, cancellationToken);
+        var timeoutMs = _configMonitor.CurrentValue.TimeForExpectedReplyInConversation;
+        var timeoutTask = Task.Delay(timeoutMs, cancellationToken);
         var responseTask = _llmService.ContinueConversationAsync(
             history, 
             new ConversationContinuation(stopwatch.Elapsed, false));
@@ -89,6 +103,10 @@ public class ChatService : IChatService
 
         if (timedOut)
         {
+            _logger.LogWarning("Chat {ChatId} response timed out after {ElapsedMs}ms", 
+                chatId, 
+                stopwatch.ElapsedMilliseconds);
+                
             // Let the LLM know about the timeout
             history = await _llmService.ContinueConversationAsync(
                 history,
@@ -96,6 +114,10 @@ public class ChatService : IChatService
         }
         else
         {
+            _logger.LogInformation("Chat {ChatId} response received in {ElapsedMs}ms", 
+                chatId, 
+                stopwatch.ElapsedMilliseconds);
+                
             history = await responseTask;
         }
 
@@ -105,7 +127,8 @@ public class ChatService : IChatService
 
     public void RemoveChat(Guid chatId)
     {
-        _chatHistories.Remove(chatId);
+        var removed = _chatHistories.Remove(chatId);
+        _logger.LogInformation("Chat {ChatId} removed: {WasRemoved}", chatId, removed);
     }
 
     public async IAsyncEnumerable<string> GetStreamingResponseAsync(
@@ -114,20 +137,35 @@ public class ChatService : IChatService
         bool isInitial = false,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("Starting {ChatType} streaming response for chat {ChatId}", 
+            isInitial ? "initial" : "continuation", 
+            chatId);
+            
         var (response, timedOut) = isInitial
             ? await InitiateChatAsync(chatId, userMessage, cancellationToken)
             : await ContinueChatAsync(chatId, userMessage, cancellationToken);
 
         if (timedOut)
         {
+            _logger.LogWarning("Streaming response for chat {ChatId} timed out", chatId);
             yield return "[Response timed out] ";
         }
 
+        var wordCount = response.Split(' ').Length;
+        _logger.LogInformation("Streaming {WordCount} words for chat {ChatId}", wordCount, chatId);
+
         foreach (var word in response.Split(' '))
         {
-            if (cancellationToken.IsCancellationRequested) yield break;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Streaming for chat {ChatId} was cancelled", chatId);
+                yield break;
+            }
+            
             await Task.Delay(50, cancellationToken);
             yield return word + " ";
         }
+        
+        _logger.LogInformation("Completed streaming response for chat {ChatId}", chatId);
     }
 }
