@@ -5,14 +5,16 @@ namespace LLMFriend.Services;
 public class ConversationLockService : IConversationLockService
 {
     private readonly ILogger<ConversationLockService> _logger;
+    private readonly TimeProvider _timeProvider;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private string? _currentConversationSource;
     private DateTimeOffset _lastActivity = DateTimeOffset.MinValue;
     private readonly TimeSpan _conversationTimeout = TimeSpan.FromMinutes(15);
 
-    public ConversationLockService(ILogger<ConversationLockService> logger)
+    public ConversationLockService(ILogger<ConversationLockService> logger, TimeProvider? timeProvider = null)
     {
         _logger = logger;
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public async Task<bool> TryAcquireConversationLockAsync(string source, CancellationToken token = default)
@@ -26,7 +28,7 @@ public class ConversationLockService : IConversationLockService
             try
             {
                 _currentConversationSource = source;
-                _lastActivity = DateTimeOffset.UtcNow;
+                _lastActivity = _timeProvider.GetUtcNow();
                 _logger.LogInformation("Conversation lock acquired by {Source}", source);
                 return true;
             }
@@ -72,7 +74,7 @@ public class ConversationLockService : IConversationLockService
     {
         // If the last activity was too long ago, force release the lock
         if (_currentConversationSource != null && 
-            DateTimeOffset.UtcNow - _lastActivity > _conversationTimeout)
+            _timeProvider.GetUtcNow() - _lastActivity > _conversationTimeout)
         {
             _logger.LogWarning("Resetting stale conversation lock from {Source} after timeout", 
                 _currentConversationSource);
@@ -85,7 +87,7 @@ public class ConversationLockService : IConversationLockService
     {
         if (_currentConversationSource != null)
         {
-            _lastActivity = DateTimeOffset.UtcNow;
+            _lastActivity = _timeProvider.GetUtcNow();
         }
     }
 }
