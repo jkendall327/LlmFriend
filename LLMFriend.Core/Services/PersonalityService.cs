@@ -5,9 +5,9 @@ namespace LLMFriend.Services;
 
 public class PersonalityService
 {
-    private readonly IOptionsMonitor<ConfigurationModel> _options;
+    private readonly IOptionsMonitor<AppConfiguration> _options;
 
-    public PersonalityService(IOptionsMonitor<ConfigurationModel> options)
+    public PersonalityService(IOptionsMonitor<AppConfiguration> options)
     {
         _options = options;
     }

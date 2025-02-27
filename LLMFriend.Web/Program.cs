@@ -18,9 +18,8 @@ builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
 
-// Configure options
-builder.Services.Configure<ConfigurationModel>(
-    builder.Configuration.GetRequiredSection("ConfigurationModel"));
+builder.Services.Configure<AppConfiguration>(
+    builder.Configuration.GetRequiredSection(nameof(AppConfiguration)));
 builder.Services.Configure<AiModelOptions>(
     builder.Configuration.GetRequiredSection(AiModelOptions.ConfigurationSection));
 
@@ -35,19 +34,32 @@ else
     builder.Services.AddSingleton<ILlmService, SemanticLlmService>();
 }
 
-// Configure Semantic Kernel with AI model options
 builder.Services.AddSingleton(sp => {
     var aiModelOptions = sp.GetRequiredService<IOptions<AiModelOptions>>().Value;
     
     #pragma warning disable SKEXP0010
-    var kernel = Kernel.CreateBuilder()
-        .AddOpenAIChatCompletion(
-            aiModelOptions.ModelName,
-            aiModelOptions.ApiRootUrl != null ? new Uri(aiModelOptions.ApiRootUrl) : null,
-            aiModelOptions.ApiKey)
-        .Build();
+
+    if (aiModelOptions.ApiRootUrl is not null)
+    {
+        var kernel = Kernel.CreateBuilder()
+            .AddOpenAIChatCompletion(
+                aiModelOptions.ModelName,
+                new Uri(aiModelOptions.ApiRootUrl),
+                aiModelOptions.ApiKey)
+            .Build();
     
-    return kernel;
+        return kernel;
+    }
+    else
+    {
+        var kernel = Kernel.CreateBuilder()
+            .AddOpenAIChatCompletion(
+                aiModelOptions.ModelName,
+                aiModelOptions.ApiKey)
+            .Build();
+    
+        return kernel;
+    }
 });
 
 var app = builder.Build();

@@ -15,7 +15,7 @@ namespace LLMFriend.Services
         private readonly PersonalityService _personalityService;
         private readonly Kernel _kernel;
         private readonly IChatCompletionService _chat;
-        private readonly IOptionsMonitor<ConfigurationModel> _options;
+        private readonly IOptionsMonitor<AppConfiguration> _options;
         private readonly IOptions<AiModelOptions> _modelOptions;
         private readonly ILogger<SemanticLlmService> _logger;
 
@@ -23,7 +23,7 @@ namespace LLMFriend.Services
             ILlmToolService llmToolService,
             ILogger<SemanticLlmService> logger,
             PersonalityService personalityService,
-            IOptionsMonitor<ConfigurationModel> options,
+            IOptionsMonitor<AppConfiguration> options,
             IOptions<AiModelOptions> modelOptions)
         {
             _kernel = kernel;

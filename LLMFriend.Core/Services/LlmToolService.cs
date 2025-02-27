@@ -11,9 +11,9 @@ namespace LLMFriend.Services
     {
         private readonly IFileSystem _fileSystem;
         private readonly ILogger<LlmToolService> _logger;
-        private readonly ConfigurationModel _config;
+        private readonly AppConfiguration _config;
 
-        public LlmToolService(IFileSystem fileSystem, ILogger<LlmToolService> logger, IOptionsMonitor<ConfigurationModel> config)
+        public LlmToolService(IFileSystem fileSystem, ILogger<LlmToolService> logger, IOptionsMonitor<AppConfiguration> config)
         {
             _fileSystem = fileSystem;
             _logger = logger;

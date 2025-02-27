@@ -23,12 +23,12 @@ public class ChatService : IChatService
     private readonly ILlmToolService _llmToolService;
     private readonly TimeProvider _clock;
     private readonly ILlmService _llmService;
-    private readonly IOptionsMonitor<ConfigurationModel> _configMonitor;
+    private readonly IOptionsMonitor<AppConfiguration> _configMonitor;
     private readonly ILogger<ChatService> _logger;
 
     public ChatService(
         ILlmToolService llmToolService,
-        IOptionsMonitor<ConfigurationModel> configMonitor,
+        IOptionsMonitor<AppConfiguration> configMonitor,
         ILogger<ChatService> logger,
         ILlmService llmService,
         TimeProvider clock)

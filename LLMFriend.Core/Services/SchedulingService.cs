@@ -7,12 +7,12 @@ namespace LLMFriend.Services
 {
     public class SchedulingService : ISchedulingService
     {
-        private readonly ConfigurationModel _config;
+        private readonly AppConfiguration _config;
         private readonly TimeProvider _clock;
         private readonly ILogger<SchedulingService> _logger;
         private readonly CronExpression _cronExpression;
 
-        public SchedulingService(IOptionsMonitor<ConfigurationModel> config, TimeProvider clock, ILogger<SchedulingService> logger)
+        public SchedulingService(IOptionsMonitor<AppConfiguration> config, TimeProvider clock, ILogger<SchedulingService> logger)
         {
             _config = config.CurrentValue;
             _clock = clock;
