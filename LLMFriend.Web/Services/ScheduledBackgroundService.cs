@@ -1,4 +1,5 @@
 using Cronos;
+using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,16 +11,19 @@ public class ScheduledBackgroundService : BackgroundService
     private readonly TimeProvider _clock;
     private readonly CronExpression _cronExpression;
     private readonly ChatNotificationService _notificationService;
+    private readonly AppConfiguration _appConfig;
 
     public ScheduledBackgroundService(
         ILogger<ScheduledBackgroundService> logger,
         TimeProvider clock,
-        ChatNotificationService notificationService)
+        ChatNotificationService notificationService,
+        IOptions<AppConfiguration> appConfig)
     {
         _notificationService = notificationService;
         _logger = logger;
         _clock = clock;
-        _cronExpression = CronExpression.Parse("*/5 * * * *"); // Every 5 minutes for testing
+        _appConfig = appConfig.Value;
+        _cronExpression = CronExpression.Parse(_appConfig.CrontabForScheduledInvocation ?? "*/5 * * * *"); // Use config or default to every 5 minutes
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -69,7 +73,15 @@ public class ScheduledBackgroundService : BackgroundService
 
     private async Task DoWorkAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("Executing scheduled background work");
+        _logger.LogInformation("Scheduled background work triggered");
+        
+        if (!_appConfig.CanActAutonomously)
+        {
+            _logger.LogInformation("Autonomous actions are disabled in configuration, skipping scheduled conversation");
+            return;
+        }
+        
+        _logger.LogInformation("Initiating scheduled conversation");
         await _notificationService.NotifyNewChatRequested(_clock.GetLocalNow(), stoppingToken);
     }
 }
