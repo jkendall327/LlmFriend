@@ -3,6 +3,7 @@ using LLMFriend.Configuration;
 using LLMFriend.Web.Components;
 using LLMFriend.Web.Services;
 using LLMFriend.Services;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +18,12 @@ builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
 
-var configurationSection = builder.Configuration.GetRequiredSection("ConfigurationModel");
+// Configure options
+builder.Services.Configure<ConfigurationModel>(
+    builder.Configuration.GetRequiredSection("ConfigurationModel"));
+builder.Services.Configure<AiModelOptions>(
+    builder.Configuration.GetRequiredSection(AiModelOptions.ConfigurationSection));
 
-builder.Services.Configure<ConfigurationModel>(configurationSection);
-
-var apiKey = configurationSection.GetRequiredSection("DeepseekApiKey").Value;
 builder.Services.AddSingleton<Kernel>();
 
 if (builder.Environment.IsDevelopment())
@@ -33,18 +35,26 @@ else
     builder.Services.AddSingleton<ILlmService, SemanticLlmService>();
 }
 
-#pragma warning disable SKEXP0010
-builder.Services.AddOpenAIChatCompletion("deepseek-reasoner",
-    new Uri("https://api.deepseek.com"),
-    apiKey);
+// Configure Semantic Kernel with AI model options
+builder.Services.AddSingleton(sp => {
+    var aiModelOptions = sp.GetRequiredService<IOptions<AiModelOptions>>().Value;
+    
+    #pragma warning disable SKEXP0010
+    var kernel = Kernel.CreateBuilder()
+        .AddOpenAIChatCompletion(
+            aiModelOptions.ModelName,
+            aiModelOptions.ApiRootUrl != null ? new Uri(aiModelOptions.ApiRootUrl) : null,
+            aiModelOptions.ApiKey)
+        .Build();
+    
+    return kernel;
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

@@ -16,19 +16,22 @@ namespace LLMFriend.Services
         private readonly Kernel _kernel;
         private readonly IChatCompletionService _chat;
         private readonly IOptionsMonitor<ConfigurationModel> _options;
+        private readonly IOptions<AiModelOptions> _modelOptions;
         private readonly ILogger<SemanticLlmService> _logger;
 
         public SemanticLlmService(Kernel kernel,
             ILlmToolService llmToolService,
             ILogger<SemanticLlmService> logger,
             PersonalityService personalityService,
-            IOptionsMonitor<ConfigurationModel> options)
+            IOptionsMonitor<ConfigurationModel> options,
+            IOptions<AiModelOptions> modelOptions)
         {
             _kernel = kernel;
             _llmToolService = llmToolService;
             _logger = logger;
             _personalityService = personalityService;
             _options = options;
+            _modelOptions = modelOptions;
             _chat = _kernel.GetRequiredService<IChatCompletionService>();
         }
 
@@ -79,7 +82,7 @@ namespace LLMFriend.Services
 
         public async Task<ChatHistory> ContinueConversationAsync(ChatHistory chatHistory, ConversationContinuation details)
         {
-            var choice = _options.CurrentValue.EnableToolUse
+            var choice = _modelOptions.Value.SupportsToolUse
                 ? FunctionChoiceBehavior.Auto()
                 : FunctionChoiceBehavior.None();
 
@@ -149,7 +152,7 @@ namespace LLMFriend.Services
                 chatHistory.AddUserMessage(context.UserStartingMessage);
             }
 
-            var choice = _options.CurrentValue.EnableToolUse
+            var choice = _modelOptions.Value.SupportsToolUse
                 ? FunctionChoiceBehavior.Auto()
                 : FunctionChoiceBehavior.None();
             
