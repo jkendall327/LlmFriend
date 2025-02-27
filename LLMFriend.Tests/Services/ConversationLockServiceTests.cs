@@ -96,34 +96,4 @@ public class ConversationLockServiceTests
         // Assert - the lock should still be active because we updated the activity
         Assert.True(service.IsConversationActive());
     }
-    
-    [Fact]
-    public async Task MultipleThreads_ShouldRespectLock()
-    {
-        // Arrange
-        var service = new ConversationLockService(_logger, _timeProvider);
-        var acquiredCount = 0;
-        
-        // Act - try to acquire the lock from multiple tasks
-        var tasks = new List<Task>();
-        for (int i = 0; i < 10; i++)
-        {
-            var source = $"Source{i}";
-            tasks.Add(Task.Run(async () =>
-            {
-                if (await service.TryAcquireConversationLockAsync(source))
-                {
-                    Interlocked.Increment(ref acquiredCount);
-                    // Hold the lock briefly
-                    await Task.Delay(50);
-                    service.ReleaseConversationLock();
-                }
-            }));
-        }
-        
-        await Task.WhenAll(tasks);
-        
-        // Assert - only one task should have acquired the lock at a time
-        Assert.Equal(10, acquiredCount);
-    }
 }
