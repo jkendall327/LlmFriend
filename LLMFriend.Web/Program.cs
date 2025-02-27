@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddHealthChecks();
+builder.Services.AddSingleton<IConversationLockService, ConversationLockService>();
 builder.Services.AddSingleton<IRandomConversationService, RandomConversationService>();
 builder.Services.AddHostedService<ScheduledBackgroundService>();
 builder.Services.AddHostedService<RandomConversationBackgroundService>();

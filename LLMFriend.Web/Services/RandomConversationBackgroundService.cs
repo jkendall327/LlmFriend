@@ -39,8 +39,16 @@ public class RandomConversationBackgroundService : BackgroundService
                 
                 if (_randomConversationService.ShouldStartConversation(currentTime))
                 {
-                    _logger.LogInformation("Initiating random conversation");
-                    await _notificationService.NotifyNewChatRequested(currentTime, stoppingToken);
+                    _logger.LogInformation("Attempting to initiate random conversation");
+                    bool started = await _notificationService.NotifyNewChatRequested(
+                        currentTime, 
+                        stoppingToken,
+                        "random");
+                        
+                    if (!started)
+                    {
+                        _logger.LogInformation("Could not start random conversation - another conversation is already active");
+                    }
                 }
                 
                 // Check every 15-30 minutes (randomized to avoid predictable patterns)

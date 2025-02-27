@@ -81,7 +81,15 @@ public class ScheduledBackgroundService : BackgroundService
             return;
         }
         
-        _logger.LogInformation("Initiating scheduled conversation");
-        await _notificationService.NotifyNewChatRequested(_clock.GetLocalNow(), stoppingToken);
+        _logger.LogInformation("Attempting to initiate scheduled conversation");
+        bool started = await _notificationService.NotifyNewChatRequested(
+            _clock.GetLocalNow(), 
+            stoppingToken,
+            "scheduled");
+            
+        if (!started)
+        {
+            _logger.LogInformation("Could not start scheduled conversation - another conversation is already active");
+        }
     }
 }

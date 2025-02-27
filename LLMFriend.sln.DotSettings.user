@@ -2,9 +2,5 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AChatClientMetadata_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003F989ef3b5f3b443885ecbbb36eb28273f424d2b2c299f7f3de92aeaff222fcd6a_003FChatClientMetadata_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AIHostedService_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002Econfig_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F4b3bd2351c5f46d38a432f9a6e59749ed108_003Fcd_003F8ff12d30_003FIHostedService_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fd7c10e6_002Db974_002D4284_002D87a7_002D7ccc421d8f14/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthcheckReturnsOk" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;TestAncestor&gt;
-    &lt;TestId&gt;xUnit::C3E60EFD-D1E1-4DA9-ADBA-0E7A6E37C313::net9.0::LLMFriend.Tests.AppStartupTests.HealthcheckReturnsOk&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::C3E60EFD-D1E1-4DA9-ADBA-0E7A6E37C313::net9.0::LLMFriend.Tests.Components.ChatInterfaceTests&lt;/TestId&gt;
-    &lt;TestId&gt;xUnit::C3E60EFD-D1E1-4DA9-ADBA-0E7A6E37C313::net9.0::LLMFriend.Tests.Components.HomePageTests&lt;/TestId&gt;
-  &lt;/TestAncestor&gt;
+  &lt;Solution /&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

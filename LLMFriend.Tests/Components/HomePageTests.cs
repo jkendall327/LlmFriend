@@ -7,12 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using System.Threading.Channels;
 using LLMFriend.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LLMFriend.Tests.Components;
 
 public class HomePageTests : TestContext
 {
-    private readonly ChatNotificationService _notificationService = new();
+    private readonly ChatNotificationService _notificationService = new(new ConversationLockService(NullLogger<ConversationLockService>.Instance));
 
     public HomePageTests()
     {
