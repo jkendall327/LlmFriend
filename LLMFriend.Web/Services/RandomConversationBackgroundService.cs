@@ -1,6 +1,5 @@
 using LLMFriend.Configuration;
 using LLMFriend.Services;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LLMFriend.Web.Services;

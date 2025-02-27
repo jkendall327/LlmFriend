@@ -2,10 +2,7 @@ using Bunit;
 using LLMFriend.Web.Components.Chat;
 using LLMFriend.Web.Components.Pages;
 using LLMFriend.Web.Services;
-using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using System.Threading.Channels;
 using LLMFriend.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 

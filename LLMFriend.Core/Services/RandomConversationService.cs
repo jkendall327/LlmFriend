@@ -1,4 +1,3 @@
-using System;
 using LLMFriend.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

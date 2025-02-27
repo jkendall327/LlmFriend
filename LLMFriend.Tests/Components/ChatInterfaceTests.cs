@@ -2,7 +2,6 @@ using Bunit;
 using LLMFriend.Services;
 using LLMFriend.Web.Components.Chat;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using NSubstitute;
 
