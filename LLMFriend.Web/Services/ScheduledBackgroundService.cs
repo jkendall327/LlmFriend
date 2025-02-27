@@ -1,6 +1,4 @@
-using LLMFriend.Configuration;
 using LLMFriend.Core.Scheduling;
-using Microsoft.Extensions.Options;
 
 namespace LLMFriend.Web.Services;
 
@@ -9,21 +7,18 @@ public class ScheduledBackgroundService : BackgroundService
     private readonly ILogger<ScheduledBackgroundService> _logger;
     private readonly TimeProvider _clock;
     private readonly ChatNotificationService _notificationService;
-    private readonly AppConfiguration _appConfig;
-    private readonly ICrontabService _crontabService;
+    private readonly IScheduledWorkService _scheduledWorkService;
 
     public ScheduledBackgroundService(
         ILogger<ScheduledBackgroundService> logger,
         TimeProvider clock,
-        ChatNotificationService notificationService,
-        IOptions<AppConfiguration> appConfig,
-        ICrontabService crontabService)
+        ChatNotificationService _notificationService,
+        IScheduledWorkService scheduledWorkService)
     {
-        _notificationService = notificationService;
+        this._notificationService = _notificationService;
         _logger = logger;
         _clock = clock;
-        _appConfig = appConfig.Value;
-        _crontabService = crontabService;
+        _scheduledWorkService = scheduledWorkService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,7 +27,23 @@ public class ScheduledBackgroundService : BackgroundService
         {
             try
             {
-                await WaitForCrontab(stoppingToken);
+                var currentTime = _clock.GetLocalNow();
+                
+                // Wait until the next scheduled execution time
+                await _scheduledWorkService.WaitForNextExecutionAsync(currentTime, stoppingToken);
+                
+                if (!stoppingToken.IsCancellationRequested)
+                {
+                    // Execute the scheduled work
+                    bool shouldInitiateConversation = await _scheduledWorkService.ExecuteScheduledWorkAsync(
+                        _clock.GetLocalNow(), 
+                        stoppingToken);
+                    
+                    if (shouldInitiateConversation)
+                    {
+                        await InitiateScheduledConversationAsync(stoppingToken);
+                    }
+                }
             }
             catch (OperationCanceledException)
             {
@@ -46,41 +57,9 @@ public class ScheduledBackgroundService : BackgroundService
             }
         }
     }
-
-    private async Task WaitForCrontab(CancellationToken stoppingToken)
+    
+    private async Task InitiateScheduledConversationAsync(CancellationToken stoppingToken)
     {
-        var currentTime = _clock.GetLocalNow();
-        var nextOccurrence = _crontabService.GetNextOccurrence(currentTime);
-        var delay = _crontabService.GetDelayUntilNextOccurrence(currentTime);
-
-        if (nextOccurrence.HasValue && delay.HasValue)
-        {
-            _logger.LogInformation("Next scheduled execution at {NextTime}", nextOccurrence.Value.ToLocalTime());
-                    
-            await Task.Delay(delay.Value, stoppingToken);
-                    
-            if (!stoppingToken.IsCancellationRequested)
-            {
-                await DoWorkAsync(stoppingToken);
-            }
-        }
-        else
-        {
-            _logger.LogWarning("No next occurrence found for the crontab expression");
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-        }
-    }
-
-    private async Task DoWorkAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("Scheduled background work triggered");
-        
-        if (!_appConfig.CanActAutonomously)
-        {
-            _logger.LogInformation("Autonomous actions are disabled in configuration, skipping scheduled conversation");
-            return;
-        }
-        
         _logger.LogInformation("Attempting to initiate scheduled conversation");
         bool started = await _notificationService.NotifyNewChatRequested(
             _clock.GetLocalNow(), 
