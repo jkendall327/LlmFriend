@@ -72,6 +72,12 @@ namespace LLMFriend.Services
             try
             {
                 var memoryPath = _config.MemoryBankFolder;
+
+                if (memoryPath is null)
+                {
+                    return;
+                }
+                
                 if (!_fileSystem.Directory.Exists(memoryPath))
                 {
                     _fileSystem.Directory.CreateDirectory(memoryPath);

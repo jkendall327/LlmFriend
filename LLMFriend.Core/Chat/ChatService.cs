@@ -42,7 +42,7 @@ public class ChatService : IChatService
 
     private readonly Dictionary<Guid, ChatHistory> _chatHistories = new();
 
-    private async Task<(string Response, bool TimedOut)> InitiateChatAsync(
+    private async Task<(string? Response, bool TimedOut)> InitiateChatAsync(
         Guid chatId, 
         string? userMessage, 
         CancellationToken cancellationToken = default)
@@ -74,7 +74,7 @@ public class ChatService : IChatService
         return (history.Last().Content, false);
     }
 
-    private async Task<(string Response, bool TimedOut)> ContinueChatAsync(
+    private async Task<(string? Response, bool TimedOut)> ContinueChatAsync(
         Guid chatId,
         string userMessage, 
         CancellationToken cancellationToken = default)
@@ -151,6 +151,11 @@ public class ChatService : IChatService
             yield return "[Response timed out] ";
         }
 
+        if (string.IsNullOrEmpty(response))
+        {
+            throw new InvalidOperationException("Got a null response from the model.");
+        }
+        
         var wordCount = response.Split(' ').Length;
         _logger.LogInformation("Streaming {WordCount} words for chat {ChatId}", wordCount, chatId);
 
