@@ -15,8 +15,6 @@ public class FakeLlmService : ILlmService
 
     public Task<ChatHistory> ContinueConversationAsync(ChatHistory chatHistory, ConversationContinuation details)
     {
-        var number = chatHistory.Count;
-        
         var content = details.MessageTookTooLong ? "Are you there?" : "Yes that's very interesting...";
         
         chatHistory.AddAssistantMessage(content + $" ({Random.Shared.Next(100).ToString()})");

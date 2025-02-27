@@ -10,20 +10,17 @@ public class RandomConversationBackgroundService : BackgroundService
     private readonly TimeProvider _timeProvider;
     private readonly IRandomConversationService _randomConversationService;
     private readonly ChatNotificationService _notificationService;
-    private readonly AppConfiguration _appConfig;
 
     public RandomConversationBackgroundService(
         ILogger<RandomConversationBackgroundService> logger,
         TimeProvider timeProvider,
         IRandomConversationService randomConversationService,
-        ChatNotificationService notificationService,
-        IOptions<AppConfiguration> appConfig)
+        ChatNotificationService notificationService)
     {
         _logger = logger;
         _timeProvider = timeProvider;
         _randomConversationService = randomConversationService;
         _notificationService = notificationService;
-        _appConfig = appConfig.Value;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

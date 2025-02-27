@@ -1,6 +1,7 @@
 @using LLMFriend.Services
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject IChatService ChatService
+@implements IDisposable
 
 <div class="chat-container">
     <div class="chat-header">
@@ -63,7 +64,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("scrollToBottom", _chatFeedDiv);
+            await Js.InvokeVoidAsync("scrollToBottom", _chatFeedDiv);
         }
         catch
         {

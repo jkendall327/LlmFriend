@@ -7,20 +7,19 @@ namespace LLMFriend.Services
 {
     public class SchedulingService : ISchedulingService
     {
-        private readonly AppConfiguration _config;
         private readonly TimeProvider _clock;
         private readonly ILogger<SchedulingService> _logger;
         private readonly CronExpression _cronExpression;
 
         public SchedulingService(IOptionsMonitor<AppConfiguration> config, TimeProvider clock, ILogger<SchedulingService> logger)
         {
-            _config = config.CurrentValue;
+            var config1 = config.CurrentValue;
             _clock = clock;
             _logger = logger;
 
             try
             {
-                _cronExpression = CronExpression.Parse(_config.CrontabForScheduledInvocation);
+                _cronExpression = CronExpression.Parse(config1.CrontabForScheduledInvocation);
             }
             catch (Exception ex)
             {
@@ -42,7 +41,7 @@ namespace LLMFriend.Services
                 }
                 else
                 {
-                    _logger.LogWarning("No next occurrence found for the crontab expression.");
+                    _logger.LogWarning("No next occurrence found for the crontab expression");
                     return DateTime.MinValue;
                 }
             }

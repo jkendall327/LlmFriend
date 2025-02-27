@@ -49,10 +49,11 @@
     private readonly List<Guid> _chats = [];
     private CancellationTokenSource? _cts;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        _cts = new CancellationTokenSource();
+        _cts = new();
         _ = MonitorNotificationsAsync(_cts.Token);
+        return Task.CompletedTask;
     }
 
     private async Task MonitorNotificationsAsync(CancellationToken cancellationToken)
@@ -62,7 +63,7 @@
             var reader = NotificationService.GetReader();
             while (await reader.WaitToReadAsync(cancellationToken))
             {
-                while (reader.TryRead(out var timestamp))
+                while (reader.TryRead(out var _))
                 {
                     await InvokeAsync(() =>
                     {
