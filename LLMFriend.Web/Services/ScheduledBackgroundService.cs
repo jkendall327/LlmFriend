@@ -1,5 +1,5 @@
+using Cronos;
 using LLMFriend.Configuration;
-using LLMFriend.Core.Scheduling;
 using Microsoft.Extensions.Options;
 
 namespace LLMFriend.Web.Services;
@@ -8,22 +8,21 @@ public class ScheduledBackgroundService : BackgroundService
 {
     private readonly ILogger<ScheduledBackgroundService> _logger;
     private readonly TimeProvider _clock;
+    private readonly CronExpression _cronExpression;
     private readonly ChatNotificationService _notificationService;
     private readonly AppConfiguration _appConfig;
-    private readonly ICrontabService _crontabService;
 
     public ScheduledBackgroundService(
         ILogger<ScheduledBackgroundService> logger,
         TimeProvider clock,
         ChatNotificationService notificationService,
-        IOptions<AppConfiguration> appConfig,
-        ICrontabService crontabService)
+        IOptions<AppConfiguration> appConfig)
     {
         _notificationService = notificationService;
         _logger = logger;
         _clock = clock;
         _appConfig = appConfig.Value;
-        _crontabService = crontabService;
+        _cronExpression = CronExpression.Parse(_appConfig.CrontabForScheduledInvocation ?? "*/5 * * * *"); // Use config or default to every 5 minutes
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,14 +49,14 @@ public class ScheduledBackgroundService : BackgroundService
     private async Task WaitForCrontab(CancellationToken stoppingToken)
     {
         var currentTime = _clock.GetLocalNow();
-        var nextOccurrence = _crontabService.GetNextOccurrence(currentTime);
-        var delay = _crontabService.GetDelayUntilNextOccurrence(currentTime);
+        var nextUtc = _cronExpression.GetNextOccurrence(currentTime, TimeZoneInfo.Local);
 
-        if (nextOccurrence.HasValue && delay.HasValue)
+        if (nextUtc.HasValue)
         {
-            _logger.LogInformation("Next scheduled execution at {NextTime}", nextOccurrence.Value.ToLocalTime());
+            var delay = nextUtc.Value - currentTime;
+            _logger.LogInformation("Next scheduled execution at {NextTime}", nextUtc.Value.ToLocalTime());
                     
-            await Task.Delay(delay.Value, stoppingToken);
+            await Task.Delay(delay, stoppingToken);
                     
             if (!stoppingToken.IsCancellationRequested)
             {
