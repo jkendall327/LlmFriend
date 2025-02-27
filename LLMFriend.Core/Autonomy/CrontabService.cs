@@ -25,7 +25,7 @@ public class CrontabService(
             var delay = nextUtc.Value - currentTime;
             logger.LogInformation("Next scheduled execution at {NextTime}", nextUtc.Value.ToLocalTime());
 
-            await Task.Delay(delay, stoppingToken);
+            await Task.Delay(delay, clock, stoppingToken);
 
             if (!stoppingToken.IsCancellationRequested)
             {
