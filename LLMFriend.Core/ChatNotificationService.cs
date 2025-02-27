@@ -3,7 +3,16 @@ using LLMFriend.Services;
 
 namespace LLMFriend.Web.Services;
 
-public class ChatNotificationService
+public interface IChatNotificationService
+{
+    ChannelReader<(DateTimeOffset timestamp, string source)> GetReader();
+    Task<bool> NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default, string source = "manual");
+    void ReleaseConversationLock();
+    bool IsConversationActive();
+    void UpdateConversationActivity();
+}
+
+public class ChatNotificationService : IChatNotificationService
 {
     private readonly Channel<(DateTimeOffset timestamp, string source)> _channel = 
         Channel.CreateUnbounded<(DateTimeOffset, string)>();

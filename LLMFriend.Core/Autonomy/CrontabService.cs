@@ -8,7 +8,7 @@ namespace LLMFriend.Services;
 
 public class CrontabService(
     TimeProvider clock,
-    ChatNotificationService notificationService,
+    IChatNotificationService notificationService,
     IOptions<AppConfiguration> configuration,
     ILogger<CrontabService> logger)
 {
