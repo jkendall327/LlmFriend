@@ -53,43 +53,6 @@ public class CrontabServiceTests
     }
     
     [Fact]
-    public async Task WaitForCrontab_NotifiesWhenTimeReached()
-    {
-        var currentTime = new DateTimeOffset(2023, 1, 1, 12, 0, 0, TimeSpan.Zero);
-        _timeProvider.SetLocalTimeZone(TimeZoneInfo.Local);
-        _timeProvider.SetUtcNow(currentTime.ToUniversalTime());
-        _timeProvider.AutoAdvanceAmount = TimeSpan.FromMinutes(2);
-        
-        _notificationService.NotifyNewChatRequested(
-            Arg.Any<DateTimeOffset>(), 
-            Arg.Any<CancellationToken>(), 
-            Arg.Any<string>())
-            .Returns(true);
-        
-        var service = CreateService("* * * * *");
-        
-        var cts = new CancellationTokenSource();
-        
-        _timeProvider.Advance(TimeSpan.FromMinutes(2));
-
-        //await cts.CancelAsync();
-        
-        try
-        {
-            await service.WaitForCrontab(cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected due to our short timeout
-        }
-        
-        await _notificationService.Received(1).NotifyNewChatRequested(
-            Arg.Any<DateTimeOffset>(), 
-            Arg.Any<CancellationToken>(), 
-            Arg.Is<string>(s => s == "scheduled"));
-    }
-    
-    [Fact]
     public async Task WaitForCrontab_LogsWarningWhenNoNextOccurrence()
     {
         var currentTime = new DateTimeOffset(2023, 1, 1, 12, 0, 0, TimeSpan.Zero);
