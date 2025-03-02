@@ -8,6 +8,17 @@
 <PageTitle>LLM Friend</PageTitle>
 
 <div class="chat-management">
+    <div class="notification-settings">
+        <label class="checkbox-container">
+            <input type="checkbox" @bind="PlaySoundNotifications" />
+            <span class="checkbox-label">Play Sound</span>
+        </label>
+        <label class="checkbox-container">
+            <input type="checkbox" @bind="ShowBrowserNotifications" />
+            <span class="checkbox-label">Browser Notifications</span>
+        </label>
+    </div>
+    
     @if (!_chats.Any())
     {
         <button class="new-chat-button" @onclick="@(() => CreateNewChat())">Start New Chat</button>
@@ -20,7 +31,12 @@
 
 @foreach (var chat in _chats)
 {
-    <ChatInterface @key="chat.Id" OnClose="@(() => CloseChat(chat.Id))" InvocationContext="chat.Context" />
+    <ChatInterface 
+        @key="chat.Id" 
+        OnClose="@(() => CloseChat(chat.Id))" 
+        InvocationContext="chat.Context"
+        PlaySoundNotifications="chat.PlaySoundNotifications"
+        ShowBrowserNotifications="chat.ShowBrowserNotifications" />
 }
 
 <style>
@@ -28,7 +44,25 @@
         max-width: 800px;
         margin: 20px auto;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .notification-settings {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 10px;
+    }
+
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .checkbox-label {
+        margin-left: 5px;
     }
 
     .new-chat-button {
@@ -53,18 +87,75 @@
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public InvocationContext? Context { get; set; }
+        public bool PlaySoundNotifications { get; set; } = true;
+        public bool ShowBrowserNotifications { get; set; } = true;
     }
     private CancellationTokenSource? _cts;
+    
+    // Notification settings
+    private bool _playSoundNotifications = true;
+    private bool _showBrowserNotifications = true;
+    
+    public bool PlaySoundNotifications
+    {
+        get => _playSoundNotifications;
+        set
+        {
+            _playSoundNotifications = value;
+            UpdateNotificationSettings();
+        }
+    }
+    
+    public bool ShowBrowserNotifications
+    {
+        get => _showBrowserNotifications;
+        set
+        {
+            _showBrowserNotifications = value;
+            UpdateNotificationSettings();
+        }
+    }
+    
+    private void UpdateNotificationSettings()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            _ = InvokeAsync(async () =>
+            {
+                await Js.InvokeVoidAsync("localStorage.setItem", "playSoundNotifications", _playSoundNotifications);
+                await Js.InvokeVoidAsync("localStorage.setItem", "showBrowserNotifications", _showBrowserNotifications);
+            });
+        }
+    }
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         if (RendererInfo.IsInteractive)
         {
             _cts = new();
             _ = MonitorNotificationsAsync(_cts.Token);
+            
+            // Load notification settings from localStorage
+            try
+            {
+                var playSoundValue = await Js.InvokeAsync<string>("localStorage.getItem", "playSoundNotifications");
+                var showNotificationsValue = await Js.InvokeAsync<string>("localStorage.getItem", "showBrowserNotifications");
+                
+                if (!string.IsNullOrEmpty(playSoundValue))
+                {
+                    _playSoundNotifications = playSoundValue.ToLowerInvariant() == "true";
+                }
+                
+                if (!string.IsNullOrEmpty(showNotificationsValue))
+                {
+                    _showBrowserNotifications = showNotificationsValue.ToLowerInvariant() == "true";
+                }
+            }
+            catch
+            {
+                // Ignore any JavaScript interop errors
+            }
         }
-        
-        return Task.CompletedTask;
     }
 
     private async Task MonitorNotificationsAsync(CancellationToken cancellationToken)
@@ -98,7 +189,10 @@
 
     private void CreateNewChat(InvocationContext? context = null)
     {
-        _chats.Add(new ChatInstance { Context = context });
+        var chat = new ChatInstance { Context = context };
+        chat.PlaySoundNotifications = _playSoundNotifications;
+        chat.ShowBrowserNotifications = _showBrowserNotifications;
+        _chats.Add(chat);
     }
 
     private void CloseChat(Guid chatId)

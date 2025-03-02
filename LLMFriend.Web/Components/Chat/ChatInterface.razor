@@ -78,6 +78,12 @@
 
     [Parameter]
     public InvocationContext? InvocationContext { get; set; }
+    
+    [Parameter]
+    public bool PlaySoundNotifications { get; set; } = true;
+    
+    [Parameter]
+    public bool ShowBrowserNotifications { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {
@@ -208,8 +214,15 @@
         StateHasChanged();
         
         // Play notification sound and show browser notification when response is complete
-        await Js.InvokeVoidAsync("playNotificationSound");
-        await Js.InvokeVoidAsync("showBrowserNotification", "New message from LLM Friend");
+        if (PlaySoundNotifications)
+        {
+            await Js.InvokeVoidAsync("playNotificationSound");
+        }
+        
+        if (ShowBrowserNotifications)
+        {
+            await Js.InvokeVoidAsync("showBrowserNotification", "New message from LLM Friend");
+        }
     }
 }
 
