@@ -62,7 +62,35 @@
     {
         if (InvocationContext is not null)
         {
-            await SendMessage();
+            // For autonomous or scheduled conversations, we don't need a user message
+            _isTyping = true;
+            StateHasChanged();
+            await ScrollToBottom();
+            
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                await StreamResponse(ChatService.GetStreamingResponseAsync(
+                    _chatId,
+                    string.Empty, 
+                    true,
+                    InvocationContext,
+                    cts.Token));
+            }
+            catch (OperationCanceledException)
+            {
+                _messages.Add(new ChatMessage 
+                { 
+                    Content = "The response timed out. Please try again.",
+                    IsUser = false,
+                    IsError = true
+                });
+            }
+            finally
+            {
+                _isTyping = false;
+                StateHasChanged();
+            }
         }
     }
 
@@ -107,6 +135,7 @@
                 _chatId,
                 userMessage, 
                 _messages.Count == 1,
+                _messages.Count == 1 ? InvocationContext : null,
                 cts.Token));
         }
         catch (OperationCanceledException)

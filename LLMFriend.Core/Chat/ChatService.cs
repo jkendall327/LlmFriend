@@ -44,25 +44,46 @@ public class ChatService : IChatService
 
     private async Task<(string? Response, bool TimedOut)> InitiateChatAsync(
         Guid chatId, 
-        string? userMessage, 
+        string? userMessage,
+        InvocationContext? providedContext = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Initiating new chat {ChatId} with message type {MessageType}", 
             chatId, 
             string.IsNullOrWhiteSpace(userMessage) ? "Autonomous" : "UserInitiated");
             
-        var type = string.IsNullOrWhiteSpace(userMessage) 
-            ? InvocationType.Autonomous 
-            : InvocationType.UserInitiated;
-            
-        var invocationContext = new InvocationContext
+        // Use the provided context or create a new one
+        InvocationContext invocationContext;
+        
+        if (providedContext != null)
         {
-            InvocationTime = _clock.GetLocalNow(),
-            Type = type,
-            Username = Environment.UserName,
-            FileList = _llmToolService.ReadEnvironment().ToArray(),
-            UserStartingMessage = userMessage
-        };
+            invocationContext = providedContext;
+            
+            // Ensure the user message is set if provided
+            if (!string.IsNullOrWhiteSpace(userMessage) && string.IsNullOrWhiteSpace(invocationContext.UserStartingMessage))
+            {
+                invocationContext.UserStartingMessage = userMessage;
+            }
+            
+            _logger.LogInformation("Using provided invocation context with type {ContextType}", invocationContext.Type);
+        }
+        else
+        {
+            var type = string.IsNullOrWhiteSpace(userMessage) 
+                ? InvocationType.Autonomous 
+                : InvocationType.UserInitiated;
+                
+            invocationContext = new InvocationContext
+            {
+                InvocationTime = _clock.GetLocalNow(),
+                Type = type,
+                Username = Environment.UserName,
+                FileList = _llmToolService.ReadEnvironment().ToArray(),
+                UserStartingMessage = userMessage
+            };
+            
+            _logger.LogInformation("Created new invocation context with type {ContextType}", type);
+        }
 
         var history = await _llmService.InvokeLlmAsync(invocationContext);
         _chatHistories[chatId] = history;
@@ -135,6 +156,7 @@ public class ChatService : IChatService
         Guid chatId,
         string userMessage, 
         bool isInitial = false,
+        InvocationContext? invocationContext = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Starting {ChatType} streaming response for chat {ChatId}", 
@@ -142,7 +164,7 @@ public class ChatService : IChatService
             chatId);
             
         var (response, timedOut) = isInitial
-            ? await InitiateChatAsync(chatId, userMessage, cancellationToken)
+            ? await InitiateChatAsync(chatId, userMessage, invocationContext, cancellationToken)
             : await ContinueChatAsync(chatId, userMessage, cancellationToken);
 
         if (timedOut)
