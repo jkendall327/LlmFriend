@@ -55,6 +55,17 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    [Parameter]
+    public InvocationContext? InvocationContext { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (InvocationContext is not null)
+        {
+            await SendMessage();
+        }
+    }
+
     public void Dispose()
     {
         ChatService.RemoveChat(_chatId);
