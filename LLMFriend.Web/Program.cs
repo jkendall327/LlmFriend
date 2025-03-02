@@ -20,6 +20,7 @@ builder.Services.AddSingleton<PersonalityService>();
 builder.Services.AddSingleton<ILlmToolService, LlmToolService>();
 builder.Services.AddSingleton<CrontabService>();
 builder.Services.AddSingleton<IChatNotificationService, ChatNotificationService>();
+builder.Services.AddSingleton<SystemPromptBuilder>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
 
