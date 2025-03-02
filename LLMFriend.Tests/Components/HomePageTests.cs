@@ -4,6 +4,7 @@ using LLMFriend.Web.Components.Pages;
 using LLMFriend.Web.Services;
 using NSubstitute;
 using LLMFriend.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LLMFriend.Tests.Components;
@@ -16,6 +17,8 @@ public class HomePageTests : TestContext
     {
         Services.AddSingleton(_notificationService);
         Services.AddSingleton(Substitute.For<IChatService>());
+        
+        Renderer.SetRendererInfo(new("Server", isInteractive: true));
         
         // Configure JSInterop for component rendering
         JSInterop.Mode = JSRuntimeMode.Loose;
