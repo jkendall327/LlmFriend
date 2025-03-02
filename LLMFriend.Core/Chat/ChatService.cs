@@ -15,6 +15,7 @@ public interface IChatService
         Guid chatId,
         string userMessage, 
         bool isInitial = false,
+        InvocationContext? invocationContext = null,
         CancellationToken cancellationToken = default);
 }
 
