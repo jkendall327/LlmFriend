@@ -43,7 +43,57 @@ public class ChatService : IChatService
 
     private readonly Dictionary<Guid, ChatHistory> _chatHistories = new();
 
-    private async Task<(string? Response, bool TimedOut)> InitiateChatAsync(
+    public void RemoveChat(Guid chatId)
+    {
+        var removed = _chatHistories.Remove(chatId);
+        _logger.LogInformation("Chat {ChatId} removed: {WasRemoved}", chatId, removed);
+    }
+
+    public async IAsyncEnumerable<string> GetStreamingResponseAsync(
+        Guid chatId,
+        string userMessage, 
+        bool isInitial = false,
+        InvocationContext? invocationContext = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Starting {ChatType} streaming response for chat {ChatId}", 
+            isInitial ? "initial" : "continuation", 
+            chatId);
+            
+        var (response, timedOut) = isInitial
+            ? await InitiateChatAsync(chatId, userMessage, invocationContext, cancellationToken)
+            : await ContinueChatAsync(chatId, userMessage, cancellationToken);
+
+        if (timedOut)
+        {
+            _logger.LogWarning("Streaming response for chat {ChatId} timed out", chatId);
+            yield return "[Response timed out] ";
+        }
+
+        if (string.IsNullOrEmpty(response))
+        {
+            throw new InvalidOperationException("Got a null response from the model.");
+        }
+        
+        var wordCount = response.Split(' ').Length;
+        _logger.LogInformation("Streaming {WordCount} words for chat {ChatId}", wordCount, chatId);
+
+        foreach (var word in response.Split(' '))
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Streaming for chat {ChatId} was cancelled", chatId);
+                yield break;
+            }
+            
+            await Task.Delay(50, cancellationToken);
+            yield return word + " ";
+        }
+        
+        _logger.LogInformation("Completed streaming response for chat {ChatId}", chatId);
+    }
+    
+        private async Task<(string? Response, bool TimedOut)> InitiateChatAsync(
         Guid chatId, 
         string? userMessage,
         InvocationContext? providedContext = null,
@@ -145,55 +195,5 @@ public class ChatService : IChatService
 
         _chatHistories[chatId] = history;
         return (history.Last().Content, timedOut);
-    }
-
-    public void RemoveChat(Guid chatId)
-    {
-        var removed = _chatHistories.Remove(chatId);
-        _logger.LogInformation("Chat {ChatId} removed: {WasRemoved}", chatId, removed);
-    }
-
-    public async IAsyncEnumerable<string> GetStreamingResponseAsync(
-        Guid chatId,
-        string userMessage, 
-        bool isInitial = false,
-        InvocationContext? invocationContext = null,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("Starting {ChatType} streaming response for chat {ChatId}", 
-            isInitial ? "initial" : "continuation", 
-            chatId);
-            
-        var (response, timedOut) = isInitial
-            ? await InitiateChatAsync(chatId, userMessage, invocationContext, cancellationToken)
-            : await ContinueChatAsync(chatId, userMessage, cancellationToken);
-
-        if (timedOut)
-        {
-            _logger.LogWarning("Streaming response for chat {ChatId} timed out", chatId);
-            yield return "[Response timed out] ";
-        }
-
-        if (string.IsNullOrEmpty(response))
-        {
-            throw new InvalidOperationException("Got a null response from the model.");
-        }
-        
-        var wordCount = response.Split(' ').Length;
-        _logger.LogInformation("Streaming {WordCount} words for chat {ChatId}", wordCount, chatId);
-
-        foreach (var word in response.Split(' '))
-        {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                _logger.LogInformation("Streaming for chat {ChatId} was cancelled", chatId);
-                yield break;
-            }
-            
-            await Task.Delay(50, cancellationToken);
-            yield return word + " ";
-        }
-        
-        _logger.LogInformation("Completed streaming response for chat {ChatId}", chatId);
     }
 }
