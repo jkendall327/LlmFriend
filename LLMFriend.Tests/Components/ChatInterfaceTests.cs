@@ -30,12 +30,11 @@ public class ChatInterfaceTests : TestContext
     [Fact]
     public async Task SendButton_ShouldSendMessage_WhenClicked()
     {
+        var response = GetMockResponseStream(["Hello", " there!"]);
+        
         _chatService
-            .GetStreamingResponseAsync(Arg.Any<Guid>(),
-                Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<InvocationContext>())
-            .Returns(GetMockResponseStream(["Hello", " there!"]));
+            .GetStreamingResponseAsync(default, default!)
+            .ReturnsForAnyArgs(response);
 
         var cut = RenderComponent<ChatInterface>();
 
