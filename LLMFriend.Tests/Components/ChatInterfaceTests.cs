@@ -34,7 +34,7 @@ public class ChatInterfaceTests : TestContext
             .GetStreamingResponseAsync(Arg.Any<Guid>(),
                 Arg.Any<string>(),
                 Arg.Any<bool>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<InvocationContext>())
             .Returns(GetMockResponseStream(["Hello", " there!"]));
 
         var cut = RenderComponent<ChatInterface>();
@@ -70,7 +70,7 @@ public class ChatInterfaceTests : TestContext
             .GetStreamingResponseAsync(Arg.Any<Guid>(),
                 Arg.Any<string>(),
                 Arg.Any<bool>(),
-                Arg.Any<CancellationToken>())
+                Arg.Any<InvocationContext>())
             .Returns(GetMockResponseStream(["Response"]));
 
         var cut = RenderComponent<ChatInterface>();
