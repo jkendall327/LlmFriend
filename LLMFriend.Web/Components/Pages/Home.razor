@@ -67,7 +67,7 @@
             var reader = NotificationService.GetReader();
             while (await reader.WaitToReadAsync(cancellationToken))
             {
-                while (reader.TryRead(out var _))
+                while (reader.TryRead(out var request))
                 {
                     await InvokeAsync(() =>
                     {

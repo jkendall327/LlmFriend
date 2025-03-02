@@ -5,8 +5,8 @@ namespace LLMFriend.Web.Services;
 
 public interface IChatNotificationService
 {
-    ChannelReader<(DateTimeOffset timestamp, string source)> GetReader();
-    Task<bool> NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default, string source = "manual");
+    ChannelReader<ChatNotification> GetReader();
+    Task<bool> NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default, string source = "manual", InvocationContext? context = null);
     void ReleaseConversationLock();
     bool IsConversationActive();
     void UpdateConversationActivity();
@@ -14,8 +14,8 @@ public interface IChatNotificationService
 
 public class ChatNotificationService : IChatNotificationService
 {
-    private readonly Channel<(DateTimeOffset timestamp, string source)> _channel = 
-        Channel.CreateUnbounded<(DateTimeOffset, string)>();
+    private readonly Channel<ChatNotification> _channel = 
+        Channel.CreateUnbounded<ChatNotification>();
     private readonly IConversationLockService _lockService;
 
     public ChatNotificationService(IConversationLockService lockService)
@@ -23,9 +23,9 @@ public class ChatNotificationService : IChatNotificationService
         _lockService = lockService;
     }
 
-    public ChannelReader<(DateTimeOffset timestamp, string source)> GetReader() => _channel.Reader;
+    public ChannelReader<ChatNotification> GetReader() => _channel.Reader;
     
-    public async Task<bool> NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default, string source = "manual")
+    public async Task<bool> NotifyNewChatRequested(DateTimeOffset timestamp, CancellationToken token = default, string source = "manual", InvocationContext? context = null)
     {
         // Try to acquire the conversation lock
         if (!await _lockService.TryAcquireConversationLockAsync(source, token))
@@ -35,7 +35,8 @@ public class ChatNotificationService : IChatNotificationService
 
         try
         {
-            await _channel.Writer.WriteAsync((timestamp, source), token);
+            var notification = new ChatNotification(timestamp, source, context);
+            await _channel.Writer.WriteAsync(notification, token);
             return true;
         }
         catch

@@ -36,10 +36,21 @@ public class RandomConversationBackgroundService : BackgroundService
                 if (_randomConversationService.ShouldStartConversation(currentTime))
                 {
                     _logger.LogInformation("Attempting to initiate random conversation");
+                    
+                    // Create an invocation context for the random conversation
+                    var context = new InvocationContext
+                    {
+                        InvocationTime = currentTime,
+                        Type = InvocationType.Autonomous,
+                        Username = "System",
+                        UserStartingMessage = null
+                    };
+                    
                     bool started = await _notificationService.NotifyNewChatRequested(
                         currentTime, 
                         stoppingToken,
-                        "random");
+                        "random",
+                        context);
                         
                     if (!started)
                     {
