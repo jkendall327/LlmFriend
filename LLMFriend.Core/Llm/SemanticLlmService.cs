@@ -148,6 +148,12 @@ namespace LLMFriend.Services
             {
                 chatHistory.AddUserMessage(context.UserStartingMessage);
             }
+            else
+            {
+                // It is amusing that this is a valid way to fix bugs when working with AI.
+                var content = "[This is a dummy user message that's required for autonomous conversations to start properly. Ignore this message.]";
+                chatHistory.AddUserMessage(content);
+            }
 
             var choice = _modelOptions.Value.SupportsToolUse
                 ? FunctionChoiceBehavior.Auto()
