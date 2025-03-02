@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using LLMFriend.Web.Services
+@using LLMFriend.Services
 @rendermode InteractiveServer
 @implements IDisposable
 @inject ChatNotificationService NotificationService
@@ -9,17 +10,17 @@
 <div class="chat-management">
     @if (!_chats.Any())
     {
-        <button class="new-chat-button" @onclick="CreateNewChat">Start New Chat</button>
+        <button class="new-chat-button" @onclick="@(() => CreateNewChat())">Start New Chat</button>
     }
     else
     {
-        <button class="new-chat-button" @onclick="CreateNewChat">New Chat</button>
+        <button class="new-chat-button" @onclick="@(() => CreateNewChat())">New Chat</button>
     }
 </div>
 
-@foreach (var chatId in _chats)
+@foreach (var chat in _chats)
 {
-    <ChatInterface @key="chatId" OnClose="@(() => CloseChat(chatId))" />
+    <ChatInterface @key="chat.Id" OnClose="@(() => CloseChat(chat.Id))" InvocationContext="chat.Context" />
 }
 
 <style>
@@ -46,7 +47,13 @@
 </style>
 
 @code {
-    private readonly List<Guid> _chats = [];
+    private readonly List<ChatInstance> _chats = [];
+    
+    private class ChatInstance
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public InvocationContext? Context { get; set; }
+    }
     private CancellationTokenSource? _cts;
 
     protected override Task OnInitializedAsync()
@@ -67,11 +74,11 @@
             var reader = NotificationService.GetReader();
             while (await reader.WaitToReadAsync(cancellationToken))
             {
-                while (reader.TryRead(out var request))
+                while (reader.TryRead(out var notification))
                 {
                     await InvokeAsync(() =>
                     {
-                        CreateNewChat();
+                        CreateNewChat(notification.Context);
                         StateHasChanged();
                     });
                 }
@@ -89,13 +96,14 @@
         _cts?.Dispose();
     }
 
-    private void CreateNewChat()
+    private void CreateNewChat(InvocationContext? context = null)
     {
-        _chats.Add(Guid.NewGuid());
+        _chats.Add(new ChatInstance { Context = context });
     }
 
     private void CloseChat(Guid chatId)
     {
-        _chats.Remove(chatId);
+        var chat = _chats.Single(s => s.Id == chatId);
+        _chats.Remove(chat);
     }
 }
