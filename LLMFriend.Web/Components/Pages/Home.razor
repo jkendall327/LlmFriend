@@ -51,8 +51,12 @@
 
     protected override Task OnInitializedAsync()
     {
-        _cts = new();
-        _ = MonitorNotificationsAsync(_cts.Token);
+        if (RendererInfo.IsInteractive)
+        {
+            _cts = new();
+            _ = MonitorNotificationsAsync(_cts.Token);
+        }
+        
         return Task.CompletedTask;
     }
 
