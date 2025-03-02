@@ -43,6 +43,27 @@
             element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
         }, 100);
     }
+    
+    window.playNotificationSound = () => {
+        const audio = new Audio('/notification.mp3');
+        audio.play().catch(e => console.error('Error playing notification sound:', e));
+    }
+    
+    window.showBrowserNotification = async (message) => {
+        if (!("Notification" in window)) {
+            console.log("This browser does not support notifications");
+            return;
+        }
+        
+        if (Notification.permission === "granted") {
+            new Notification("LLM Friend", { body: message });
+        } else if (Notification.permission !== "denied") {
+            const permission = await Notification.requestPermission();
+            if (permission === "granted") {
+                new Notification("LLM Friend", { body: message });
+            }
+        }
+    }
 </script>
 
 @code {
@@ -185,6 +206,10 @@
 
         assistantMessage.IsComplete = true;
         StateHasChanged();
+        
+        // Play notification sound and show browser notification when response is complete
+        await Js.InvokeVoidAsync("playNotificationSound");
+        await Js.InvokeVoidAsync("showBrowserNotification", "New message from LLM Friend");
     }
 }
 
