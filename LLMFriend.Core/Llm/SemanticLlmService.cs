@@ -11,12 +11,12 @@ namespace LLMFriend.Services
     
     public class SemanticLlmService : ILlmService
     {
-        private readonly ILlmToolService _llmToolService;
         private readonly PersonalityService _personalityService;
         private readonly Kernel _kernel;
         private readonly IChatCompletionService _chat;
-        private readonly IOptions<AiModelOptions> _modelOptions;
         private readonly ILogger<SemanticLlmService> _logger;
+
+        private readonly OpenAIPromptExecutionSettings _promptSettings;
 
         public SemanticLlmService(Kernel kernel,
             ILlmToolService llmToolService,
@@ -25,11 +25,20 @@ namespace LLMFriend.Services
             IOptions<AiModelOptions> modelOptions)
         {
             _kernel = kernel;
-            _llmToolService = llmToolService;
             _logger = logger;
             _personalityService = personalityService;
-            _modelOptions = modelOptions;
             _chat = _kernel.GetRequiredService<IChatCompletionService>();
+            
+            _kernel.ImportPluginFromObject(llmToolService);
+            
+            var choice = modelOptions.Value.SupportsToolUse
+                ? FunctionChoiceBehavior.Auto()
+                : FunctionChoiceBehavior.None();
+
+            _promptSettings = new()
+            {
+                FunctionChoiceBehavior = choice
+            };
         }
 
         private const string SystemPrompt = """
@@ -79,15 +88,6 @@ namespace LLMFriend.Services
 
         public async Task<ChatHistory> ContinueConversationAsync(ChatHistory chatHistory, ConversationContinuation details)
         {
-            var choice = _modelOptions.Value.SupportsToolUse
-                ? FunctionChoiceBehavior.Auto()
-                : FunctionChoiceBehavior.None();
-
-            var executionSettings = new OpenAIPromptExecutionSettings
-            {
-                FunctionChoiceBehavior = choice
-            };
-
             if (details.MessageTookTooLong)
             {
                 chatHistory.AddUserMessage($"[SYSTEM]: The user took too long to send their last message ({details.TimeForUserMessage}).");
@@ -95,7 +95,7 @@ namespace LLMFriend.Services
             
             try
             {
-                var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
+                var result = await _chat.GetChatMessageContentAsync(chatHistory, _promptSettings, _kernel);
 
                 chatHistory.Add(result);
                 return chatHistory;
@@ -137,7 +137,6 @@ namespace LLMFriend.Services
                          Environment.NewLine +
                          personality;
 
-            _kernel.ImportPluginFromObject(_llmToolService);
 
             var chatHistory = new ChatHistory
             {
@@ -155,16 +154,7 @@ namespace LLMFriend.Services
                 chatHistory.AddUserMessage(content);
             }
 
-            var choice = _modelOptions.Value.SupportsToolUse
-                ? FunctionChoiceBehavior.Auto()
-                : FunctionChoiceBehavior.None();
-            
-            var executionSettings = new OpenAIPromptExecutionSettings
-            {
-                FunctionChoiceBehavior = choice
-            };
-
-            var result = await _chat.GetChatMessageContentAsync(chatHistory, executionSettings, _kernel);
+            var result = await _chat.GetChatMessageContentAsync(chatHistory, _promptSettings, _kernel);
 
             chatHistory.Add(result);
 
